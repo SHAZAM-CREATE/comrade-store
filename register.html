@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create account — Comrade Store</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar"><a class="brand" href="login.html"><span class="dot"></span>Comrade Store <small>Beta</small></a></div>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h2>Join Comrade Store</h2>
+      <p class="sub">Buy and sell second-hand &amp; new items with people near you.</p>
+      <div class="error-box" id="errorBox" style="display:none;"></div>
+      <form id="registerForm">
+        <div class="field"><label>Username</label><input name="username" required pattern="[A-Za-z0-9_]{3,20}" title="3-20 letters, numbers or underscore"><small class="hint">Letters, numbers, underscore only.</small></div>
+        <div class="field"><label>Email</label><input name="email" type="email" required></div>
+        <div class="field"><label>Phone number</label><input name="phone" type="tel" required placeholder="07XXXXXXXX"></div>
+        <div class="field"><label>Password</label><input name="password" type="password" required minlength="6"><small class="hint">At least 6 characters.</small></div>
+        <button class="btn btn-primary" type="submit">Create account</button>
+      </form>
+      <p class="auth-foot">Already registered? <a class="linkbtn" href="login.html">Log in</a></p>
+    </div>
+  </div>
+  <script type="module" src="js/register.js"></script>
+</body>
+</html>

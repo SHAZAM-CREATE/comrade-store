@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comrade Store</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <a class="brand" href="index.html"><span class="dot"></span>Comrade Store <small>Beta</small></a>
+    <div class="user-chip">
+      <div class="avatar" id="userChipAvatar">?</div>
+      <span id="userChipName"></span>
+      <button class="linkbtn" id="logoutBtn">Log out</button>
+    </div>
+  </div>
+
+  <div class="app">
+    <div class="feed-header">
+      <h1>What comrades are selling</h1>
+      <a class="btn btn-gold" href="post-item.html">+ Post an item</a>
+    </div>
+    <div class="categories" id="categories"></div>
+
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="ic">🗃️</div>
+      <div>No items here yet. Be the first to post in this category!</div>
+    </div>
+    <div class="grid" id="grid"></div>
+
+    <a class="fab" href="post-item.html">＋ Sell something</a>
+    <div class="footnote">Contact unlocks cost KES 20 via M-Pesa. Map &amp; distances use OpenStreetMap and your browser's location.</div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

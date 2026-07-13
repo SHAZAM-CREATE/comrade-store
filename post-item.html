@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post an item — Comrade Store</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <a class="brand" href="index.html"><span class="dot"></span>Comrade Store <small>Beta</small></a>
+    <div class="user-chip">
+      <div class="avatar" id="userChipAvatar">?</div>
+      <span id="userChipName"></span>
+      <button class="linkbtn" id="logoutBtn">Log out</button>
+    </div>
+  </div>
+
+  <div class="app">
+    <a class="back-link" href="index.html">← Back to feed</a>
+    <div class="form-card">
+      <h2 style="margin-top:0;color:var(--ink);">List an item</h2>
+      <div class="error-box" id="errorBox" style="display:none;"></div>
+      <form id="postForm">
+        <div class="field"><label>Title</label><input name="title" required placeholder="e.g. 3-seater sofa, barely used"></div>
+        <div class="field"><label>Description</label><textarea name="description" rows="3" required placeholder="Condition details, size, why you're selling..."></textarea></div>
+        <div class="form-row">
+          <div class="field"><label>Category</label>
+            <select name="category" required id="categorySelect"></select>
+          </div>
+          <div class="field"><label>Price (KES)</label><input name="price" type="number" min="1" required></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Condition</label>
+            <div class="radio-group">
+              <label class="radio-opt"><input type="radio" name="condition" value="new" checked> New</label>
+              <label class="radio-opt"><input type="radio" name="condition" value="used"> Used</label>
+            </div>
+          </div>
+          <div class="field"><label>Quantity</label><input name="quantity" type="number" min="1" value="1" required></div>
+        </div>
+        <div class="field"><label>Availability</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="status" value="available" checked> Available</label>
+            <label class="radio-opt"><input type="radio" name="status" value="sold"> Sold</label>
+          </div>
+        </div>
+        <div class="field"><label>Contact number for buyers</label><input name="contact" id="contact" required></div>
+        <div class="field">
+          <label>Pickup / item location</label>
+          <input name="locationName" required placeholder="e.g. Hostel B, Main Campus">
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button type="button" class="btn btn-outline" style="flex:1" id="useLocationBtn">📍 Use my current location</button>
+          </div>
+          <small class="hint">Or click on the map to drop a pin.</small>
+          <div class="map-box"><div id="postMap" style="height:100%;"></div></div>
+        </div>
+        <button class="btn btn-primary" type="submit" style="margin-top:8px;">Publish listing</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script type="module">
+    import { CATEGORIES } from './js/utils.js';
+    document.getElementById('categorySelect').innerHTML =
+      CATEGORIES.map(c => `<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
+  </script>
+  <script type="module" src="js/post.js"></script>
+</body>
+</html>

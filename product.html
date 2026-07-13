@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Item details — Comrade Store</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <a class="brand" href="index.html"><span class="dot"></span>Comrade Store <small>Beta</small></a>
+    <div class="user-chip">
+      <div class="avatar" id="userChipAvatar">?</div>
+      <span id="userChipName"></span>
+      <button class="linkbtn" id="logoutBtn">Log out</button>
+    </div>
+  </div>
+
+  <div class="app">
+    <a class="back-link" href="index.html">← Back to feed</a>
+    <div id="detailRoot">
+      <div class="detail-grid">
+        <div>
+          <div class="detail-media">
+            <span class="status-flag" id="statusFlag" style="position:absolute;top:12px;left:12px;"></span>
+            <span id="mediaIcon"></span>
+          </div>
+          <div class="map-card">
+            <h3>📍 Location &amp; travel time</h3>
+            <div id="detailMap"></div>
+            <div id="travelInfo"></div>
+          </div>
+        </div>
+        <div class="detail-panel">
+          <span class="tagchip" id="catChip"></span>
+          <h1 id="title"></h1>
+          <div class="pricetag-lg" id="price"></div>
+          <div class="meta-row" id="metaRow"></div>
+          <div class="desc-block" id="desc"></div>
+          <div class="seller-row" id="sellerRow"></div>
+          <div class="contact-box" id="contactBox"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script type="module" src="js/detail.js"></script>
+</body>
+</html>
