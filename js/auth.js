@@ -5,13 +5,9 @@ import { supabase } from './supabase-client.js';
 // username (shown throughout the app) and store it in a `profiles` row
 // linked 1:1 to the auth user.
 export async function registerUser({ username, email, phone, password }) {
-  const { data: existing, error: lookupErr } = await supabase
-    .from('profiles')
-    .select('username')
-    .eq('username', username)
-    .maybeSingle();
+  const { data: taken, error: lookupErr } = await supabase.rpc('username_exists', { p_username: username });
   if (lookupErr) throw lookupErr;
-  if (existing) throw new Error('That username is already taken.');
+  if (taken) throw new Error('That username is already taken.');
 
   const { data, error } = await supabase.auth.signUp({
     email,
