@@ -18,9 +18,9 @@ function cardHtml(p) {
   const c = catInfo(p.category);
   return `
   <a class="card" href="${productUrl(p.id)}" style="text-decoration:none;color:inherit;">
-    <div class="card-media"${p.image_url ? ` style="background:none;padding:0;"` : ''}>
+    <div class="card-media">
       <span class="status-flag ${p.status}">${p.status === 'available' ? 'Available' : 'Sold'}</span>
-      ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.title)}" style="width:100%;height:100%;object-fit:cover;">` : c.icon}
+      ${c.icon}
       <div class="pricetag">KES ${Number(p.price).toLocaleString()}</div>
     </div>
     <div class="card-body">
@@ -69,6 +69,7 @@ async function init() {
   document.getElementById('userChipName').textContent = profile.username || profile.email;
   document.getElementById('userChipAvatar').textContent = (profile.username || profile.email || '?').slice(0, 2).toUpperCase();
   wireLogoutButton(document.getElementById('logoutBtn'));
+  if (profile.is_admin) document.getElementById('adminLink').style.display = 'inline';
 
   renderCategoryPills();
   allProducts = await loadProducts();

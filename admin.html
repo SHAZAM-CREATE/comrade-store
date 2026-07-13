@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Comrade Store</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <a class="brand" href="index.html"><span class="dot"></span>Comrade Store <small>Admin</small></a>
+    <div class="user-chip">
+      <div class="avatar" id="userChipAvatar">?</div>
+      <span id="userChipName"></span>
+      <a class="linkbtn" href="index.html" style="margin-right:4px;">Back to feed</a>
+      <button class="linkbtn" id="logoutBtn">Log out</button>
+    </div>
+  </div>
+
+  <div class="app">
+    <div class="admin-header">
+      <h1>Admin dashboard</h1>
+      <p>Users, payments, revenue, and listing moderation.</p>
+    </div>
+
+    <div class="stat-grid" id="statGrid"></div>
+
+    <div class="admin-tabs" id="adminTabs">
+      <button class="admin-tab active" data-panel="revenuePanel">Revenue</button>
+      <button class="admin-tab" data-panel="usersPanel">Users</button>
+      <button class="admin-tab" data-panel="paymentsPanel">Payments</button>
+      <button class="admin-tab" data-panel="soldPanel">Sold items</button>
+    </div>
+
+    <div class="admin-panel active" id="revenuePanel">
+      <div class="admin-section">
+        <h2>Revenue by month</h2>
+        <div class="table-scroll"><table class="data-table" id="monthlyTable"></table></div>
+      </div>
+      <div class="admin-section">
+        <h2>Revenue by year</h2>
+        <div class="table-scroll"><table class="data-table" id="yearlyTable"></table></div>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="usersPanel">
+      <div class="admin-section">
+        <h2>All users</h2>
+        <div class="table-scroll"><table class="data-table" id="usersTable"></table></div>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="paymentsPanel">
+      <div class="admin-section">
+        <h2>All payments</h2>
+        <div class="table-scroll"><table class="data-table" id="paymentsTable"></table></div>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="soldPanel">
+      <div class="admin-section">
+        <h2>Sold items</h2>
+        <p style="font-size:13px;color:var(--text-soft);margin:-6px 0 14px;">Remove any sold listing to clean up the feed.</p>
+        <div class="table-scroll"><table class="data-table" id="soldTable"></table></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>
