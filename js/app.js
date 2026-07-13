@@ -18,9 +18,9 @@ function cardHtml(p) {
   const c = catInfo(p.category);
   return `
   <a class="card" href="${productUrl(p.id)}" style="text-decoration:none;color:inherit;">
-    <div class="card-media">
+    <div class="card-media"${p.image_url ? ` style="background:none;padding:0;"` : ''}>
       <span class="status-flag ${p.status}">${p.status === 'available' ? 'Available' : 'Sold'}</span>
-      ${c.icon}
+      ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.title)}" style="width:100%;height:100%;object-fit:cover;">` : c.icon}
       <div class="pricetag">KES ${Number(p.price).toLocaleString()}</div>
     </div>
     <div class="card-body">
