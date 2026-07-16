@@ -53,53 +53,63 @@ static host (Netlify, Vercel, GitHub Pages, Supabase Storage, etc).
 
 ## 2. Deploy the two payment Edge Functions
 
-These hold your PayHero credentials server-side — never put an API
-password in a file that ships to the browser.
+These hold your BluePay credentials server-side — never put an API
+secret in a file that ships to the browser.
 
 ```bash
 supabase login
 supabase link --project-ref YOUR_PROJECT_REF
-supabase functions deploy payhero-initiate
-supabase functions deploy payhero-callback --no-verify-jwt
+supabase functions deploy bluepay-initiate
+supabase functions deploy bluepay-callback --no-verify-jwt
 
 supabase secrets set \
-  PAYHERO_USERNAME=your_payhero_api_username \
-  PAYHERO_PASSWORD=your_payhero_api_password \
-  PAYHERO_CHANNEL_ID=your_channel_id \
-  PUBLIC_CALLBACK_URL=https://YOUR_PROJECT_REF.functions.supabase.co/payhero-callback
+  BLUEPAY_API_SECRET=your_bluepay_api_secret \
+  BLUEPAY_CHANNEL_ID=your_channel_uuid
 ```
 
-Get the API username/password and channel id from your PayHero portal
-(app.payhero.co.ke → Payment Channels). In `js/config.js`, confirm
-`PAYMENT_INITIATE_FUNCTION` matches the deployed function name
-(`payhero-initiate` by default).
+Get these from your bluepay.co.ke dashboard:
+- **API secret** — Dashboard → **API Keys** (use the secret key, Bearer auth)
+- **Channel UUID** — Dashboard → **Payment channels** (the `channel_id`, not a password)
+
+Then, in the bluepay.co.ke dashboard under **Account → Callback URL**, set:
+```
+https://YOUR_PROJECT_REF.functions.supabase.co/bluepay-callback
+```
+That's how BluePay tells your app a payment succeeded or failed.
+
+In `js/config.js`, `PAYMENT_INITIATE_FUNCTION` should be `"bluepay-initiate"` (already set).
 
 ## 3. How the payment flow works
 
 1. Buyer taps **Unlock contact** on `product.html` → `js/payment.js`
-   calls the `payhero-initiate` function with their phone number.
+   calls the `bluepay-initiate` function with their phone number.
 2. The function creates a `pending` row in `payments`, then asks
-   PayHero's API (`POST https://backend.payhero.co.ke/api/v2/payments`)
-   to push an M-Pesa prompt to that phone.
-3. The buyer enters their M-Pesa PIN. PayHero POSTs the result to
-   `payhero-callback`, which flips the row to `success` or `failed` and,
-   on success, inserts a row in `unlocks`.
+   BluePay's API (`POST https://bluepay.co.ke/api/stk_push.php`) to push
+   an M-Pesa prompt to that phone, using your `channel_id` and our
+   internal payment id as the `account_reference`.
+3. The buyer enters their M-Pesa PIN. BluePay POSTs a signed webhook
+   (`X-BluePay-Signature: v1=<HMAC-SHA256 of the raw body>`) to
+   `bluepay-callback`, which verifies the signature, flips the row to
+   `success` or `failed`, and — on success — inserts a row in `unlocks`.
 4. The browser is watching that `payments` row over Supabase Realtime
    (with a polling fallback), so the contact number appears the moment
    payment clears — no page refresh needed.
 
-## About BluePay
+BluePay also exposes a polling endpoint (`POST /api/payment_status.php`)
+as a backup in case a webhook is ever missed — worth knowing about if
+you want to add a manual "check status" retry later, though the
+webhook + Realtime combination already covers the normal case.
 
-You mentioned bluepay.co.ke as an alternative gateway. I wasn't able to
-confirm that domain's specific API from public documentation — the
-"BluePay" documentation that's easy to find belongs to a US card
-processor (Fiserv/BluePay) with a completely different API, so I didn't
-want to hand you integration code built on a guess. If you'd like to use
-bluepay.co.ke instead of PayHero, get their API docs directly from their
-support/dashboard and I can adapt `payhero-initiate`/`payhero-callback`
-into `bluepay-initiate`/`bluepay-callback` with the same shape (the
-frontend in `js/payment.js` doesn't need to change either way — it just
-calls whichever Edge Function name is set in `js/config.js`).
+## About the two payment providers
+
+This project ships with working Edge Functions for **both** BluePay
+(`supabase/functions/bluepay-*`) and PayHero (`supabase/functions/payhero-*`).
+`js/config.js` currently points at BluePay (`PAYMENT_INITIATE_FUNCTION =
+"bluepay-initiate"`). If you ever want to switch back to PayHero, deploy
+its two functions, set its secrets (see git history / the PayHero
+function's own comments), and change that one config line — `js/payment.js`
+doesn't need to change either way, since it just calls whichever function
+name is configured.
 
 ## Notes
 
