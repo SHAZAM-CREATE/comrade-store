@@ -5,7 +5,7 @@
 // ============================================================
 
 // Supabase project settings: Project Settings → API in your Supabase dashboard.
-export const SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
+export const SUPABASE_URL = "https://fttwibvdjqegngthpbtx.supabase.co";
 export const SUPABASE_ANON_KEY = "sb_publishable_bwd54nGvG3yRU5IQn3aNbw_Y8kOoafg";
 
 // Price (in KES) charged to unlock a seller's contact details.
