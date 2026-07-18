@@ -8,6 +8,7 @@ let categoryFilter = 'all';
 let countyFilter = 'all';
 let institutionFilter = 'all';
 let locationSearch = '';
+let productSearch = '';
 
 let offset = 0;
 let loading = false;
@@ -19,13 +20,28 @@ function escapeLike(term) {
   return term.replace(/[%_]/g, m => '\\' + m);
 }
 
+// Strips characters that have special meaning inside a PostgREST
+// .or() filter string (commas separate conditions, parens group them)
+// so a search term can never break out of the intended filter.
+function sanitizeForOr(term) {
+  return escapeLike(term.replace(/[,()]/g, ' ').trim());
+}
+
 function buildQuery() {
   let query = supabase.from('products').select('*').order('created_at', { ascending: false });
   if (categoryFilter !== 'all') query = query.eq('category', categoryFilter);
   if (countyFilter !== 'all') query = query.eq('county', countyFilter);
   if (institutionFilter !== 'all') query = query.eq('institution', institutionFilter);
-  const term = locationSearch.trim();
-  if (term) query = query.ilike('location_name', `%${escapeLike(term)}%`);
+
+  const locTerm = locationSearch.trim();
+  if (locTerm) query = query.ilike('location_name', `%${escapeLike(locTerm)}%`);
+
+  const nameTerm = productSearch.trim();
+  if (nameTerm) {
+    const safe = sanitizeForOr(nameTerm);
+    query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%`);
+  }
+
   return query;
 }
 
@@ -92,6 +108,17 @@ async function renderFilterBar() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       locationSearch = searchInput.value;
+      resetAndLoad();
+    }, 400);
+  });
+
+  const nameSearchInput = document.getElementById('productSearchInput');
+  let nameDebounceTimer;
+  nameSearchInput.value = productSearch;
+  nameSearchInput.addEventListener('input', () => {
+    clearTimeout(nameDebounceTimer);
+    nameDebounceTimer = setTimeout(() => {
+      productSearch = nameSearchInput.value;
       resetAndLoad();
     }, 400);
   });

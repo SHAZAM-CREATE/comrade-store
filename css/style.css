@@ -97,6 +97,15 @@ button{font-family:var(--font-body); cursor:pointer;}
 }
 .pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
 
+.product-search-wrap{position:relative;margin:4px 0 16px;}
+.product-search-input{
+  width:100%;padding:12px 14px 12px 40px;border:1.5px solid var(--line);border-radius:12px;
+  background:#fff;font-size:14px;font-family:var(--font-body);color:var(--text);box-shadow:var(--shadow);
+}
+.product-search-input::placeholder{color:var(--text-soft);}
+.product-search-input:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold-dark);}
+.product-search-wrap::before{content:'🔍';position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
+
 .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px;}
 .filter-bar select{
   padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;background:#fff;
