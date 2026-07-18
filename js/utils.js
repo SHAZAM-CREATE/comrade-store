@@ -6,6 +6,8 @@ export const CATEGORIES = [
   {id:'electronics', label:'Electronics', icon:'🔌'},
   {id:'gaming', label:'Gaming', icon:'🎮'},
   {id:'books', label:'Books', icon:'📚'},
+  {id:'beauty', label:'Beauty', icon:'💄'},
+  {id:'services', label:'Services', icon:'🧰'},
   {id:'other', label:'Other', icon:'🏷️'},
 ];
 
