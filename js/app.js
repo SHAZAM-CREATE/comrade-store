@@ -32,20 +32,17 @@ function cardHtml(p) {
   const c = catInfo(p.category);
   return `
   <a class="card" href="${productUrl(p.id)}" style="text-decoration:none;color:inherit;">
-    <div class="card-media"${p.image_url ? ' style="background:none;padding:0;"' : ''}>
+    <div class="card-media">
       <span class="status-flag ${p.status}">${p.status === 'available' ? 'Available' : 'Sold'}</span>
       ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.title)}" style="width:100%;height:100%;object-fit:cover;">` : c.icon}
-      <div class="pricetag">KES ${Number(p.price).toLocaleString()}</div>
     </div>
     <div class="card-body">
       <h3>${esc(p.title)}</h3>
-      <div class="card-meta">
-        <span class="tagchip">${c.icon} ${c.label}</span>
-        <span class="tagchip">${p.condition === 'new' ? 'New' : 'Used'}</span>
-        <span class="tagchip">Qty ${esc(p.quantity)}</span>
+      <div class="card-price">KES ${Number(p.price).toLocaleString()}</div>
+      <div class="card-meta-mini">
+        <span class="cond">${p.condition === 'new' ? 'New' : 'Used'}</span>
+        <span class="card-loc-mini">📍 ${esc(p.location_name || 'Location set')}</span>
       </div>
-      <div class="card-desc">${esc((p.description || '').slice(0, 90))}${(p.description || '').length > 90 ? '…' : ''}</div>
-      <div class="card-loc">📍 ${esc(p.location_name || 'Location set')}</div>
     </div>
   </a>`;
 }
