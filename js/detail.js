@@ -47,9 +47,45 @@ function renderHeader(p) {
   document.getElementById('statusFlag').className = `status-flag ${p.status}`;
   const mediaEl = document.getElementById('mediaIcon');
   if (p.image_url) {
-    mediaEl.outerHTML = `<img id="mediaIcon" src="${esc(p.image_url)}" alt="${esc(p.title)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
+    mediaEl.outerHTML = `<img id="mediaIcon" src="${esc(p.image_url)}" alt="${esc(p.title)}">`;
   } else {
     mediaEl.textContent = c.icon;
+  }
+
+  const carousel = document.getElementById('mediaCarousel');
+  const hint = document.getElementById('mediaHint');
+  ['photo2Slide', 'videoSlide'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  });
+
+  if (p.image_url_2) {
+    const slide2 = document.createElement('div');
+    slide2.className = 'media-slide';
+    slide2.id = 'photo2Slide';
+    slide2.innerHTML = `<img src="${esc(p.image_url_2)}" alt="${esc(p.title)} (second photo)">`;
+    carousel.appendChild(slide2);
+  }
+
+  if (p.video_url) {
+    const slideV = document.createElement('div');
+    slideV.className = 'media-slide';
+    slideV.id = 'videoSlide';
+    slideV.innerHTML = `<video controls playsinline preload="metadata"><source src="${esc(p.video_url)}"></video>`;
+    carousel.appendChild(slideV);
+  }
+
+  if (p.image_url_2 && p.video_url) {
+    hint.textContent = '📸🎥 Swipe right for more photos & the video →';
+    hint.style.display = 'block';
+  } else if (p.video_url) {
+    hint.textContent = '🎥 Swipe right to watch the video →';
+    hint.style.display = 'block';
+  } else if (p.image_url_2) {
+    hint.textContent = '📸 Swipe right for another photo →';
+    hint.style.display = 'block';
+  } else {
+    hint.style.display = 'none';
   }
 }
 

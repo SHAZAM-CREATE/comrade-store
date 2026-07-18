@@ -24,7 +24,18 @@
       <form id="postForm">
         <div class="field"><label>Title</label><input name="title" required placeholder="e.g. 3-seater sofa, barely used"></div>
         <div class="field"><label>Description</label><textarea name="description" rows="3" required placeholder="Condition details, size, why you're selling..."></textarea></div>
-        <div class="field"><label>Photo</label><input type="file" name="image" id="imageInput" accept="image/*"></div>
+        <div class="field"><label>Photo</label><input type="file" name="image" id="imageInput" accept="image/*" required></div>
+        <div class="field">
+          <label>Second item <small class="hint">(optional — choose one)</small></label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="secondMediaType" value="none" checked> None</label>
+            <label class="radio-opt"><input type="radio" name="secondMediaType" value="photo"> Photo</label>
+            <label class="radio-opt"><input type="radio" name="secondMediaType" value="video"> Video</label>
+          </div>
+          <input type="file" name="image2" id="imageInput2" accept="image/*" style="display:none;margin-top:10px;">
+          <input type="file" name="video" id="videoInput" accept="video/*" style="display:none;margin-top:10px;">
+          <small class="hint" id="videoHintText" style="display:none;">Max 15 seconds.</small>
+        </div>
         <div class="form-row">
           <div class="field"><label>Category</label>
             <select name="category" required id="categorySelect"></select>
