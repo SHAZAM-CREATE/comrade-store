@@ -47,11 +47,30 @@ async function handleSubmit(ev) {
   const f = new FormData(ev.target);
   const loc = draftLoc || myLocation || NAIROBI_FALLBACK;
 
+  const submitBtn = ev.target.querySelector('button[type=submit]');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Publishing…';
+
+  let imageUrl = null;
+  const file = document.getElementById('imageInput').files[0];
+  if (file) {
+    const path = `${profile.id}/${Date.now()}-${file.name}`;
+    const { error: uploadErr } = await supabase.storage.from('product-images').upload(path, file);
+    if (uploadErr) {
+      showError('Photo upload failed: ' + uploadErr.message);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Publish listing';
+      return;
+    }
+    imageUrl = supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+  }
+
   const product = {
     seller_id: profile.id,
     county: profile.county || null,
     institution: profile.institution || null,
     town: profile.town || null,
+    image_url: imageUrl,
     title: f.get('title').trim(),
     description: f.get('description').trim(),
     category: f.get('category'),
@@ -64,10 +83,6 @@ async function handleSubmit(ev) {
     lat: loc.lat,
     lng: loc.lng,
   };
-
-  const submitBtn = ev.target.querySelector('button[type=submit]');
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Publishing…';
 
   const { error } = await supabase.from('products').insert(product);
   if (error) {
