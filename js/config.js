@@ -16,3 +16,13 @@ export const UNLOCK_FEE_KES = 20;
 // (that function holds your real BluePay API secret — never
 // put that secret in this file, since this file ships to the browser).
 export const PAYMENT_INITIATE_FUNCTION = "bluepay-initiate";
+
+// Footer contact / social links — edit these to point at your real
+// channels. Every page's footer pulls from here, so this is the only
+// place you need to update them.
+export const SOCIAL_LINKS = {
+  whatsapp: "https://wa.me/c/2547XXXXXXXX",   // your WhatsApp Channel link
+  email: "support.comradestore@gmail.com",         // support inbox
+  facebook: "https://facebook.com/comradestore",
+  tiktok: "https://tiktok.com/@comradestore",
+};
