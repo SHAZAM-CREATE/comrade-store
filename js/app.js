@@ -104,24 +104,32 @@ async function renderFilterBar() {
 
   let debounceTimer;
   searchInput.value = locationSearch;
+  const triggerLocationSearch = () => {
+    clearTimeout(debounceTimer);
+    locationSearch = searchInput.value;
+    resetAndLoad();
+  };
   searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      locationSearch = searchInput.value;
-      resetAndLoad();
-    }, 400);
+    debounceTimer = setTimeout(triggerLocationSearch, 400);
   });
+  searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); triggerLocationSearch(); } });
+  document.getElementById('locationSearchBtn').addEventListener('click', triggerLocationSearch);
 
   const nameSearchInput = document.getElementById('productSearchInput');
   let nameDebounceTimer;
   nameSearchInput.value = productSearch;
+  const triggerProductSearch = () => {
+    clearTimeout(nameDebounceTimer);
+    productSearch = nameSearchInput.value;
+    resetAndLoad();
+  };
   nameSearchInput.addEventListener('input', () => {
     clearTimeout(nameDebounceTimer);
-    nameDebounceTimer = setTimeout(() => {
-      productSearch = nameSearchInput.value;
-      resetAndLoad();
-    }, 400);
+    nameDebounceTimer = setTimeout(triggerProductSearch, 400);
   });
+  nameSearchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); triggerProductSearch(); } });
+  document.getElementById('productSearchBtn').addEventListener('click', triggerProductSearch);
 }
 
 function setLoadMoreVisible(visible, busy = false) {

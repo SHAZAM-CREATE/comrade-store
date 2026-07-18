@@ -21,14 +21,18 @@
       <h1>What comrades are selling</h1>
       <a class="btn btn-gold" href="post-item.html">+ Post an item</a>
     </div>
-    <div class="product-search-wrap">
+    <div class="search-row">
       <input type="text" id="productSearchInput" class="product-search-input" placeholder="Search product name, e.g. Sofa, iPhone 13">
+      <button type="button" id="productSearchBtn" class="search-btn" aria-label="Search products">🔍</button>
     </div>
     <div class="categories" id="categories"></div>
     <div class="filter-bar">
       <select id="countyFilterSelect"></select>
       <select id="institutionFilterSelect"></select>
-      <input type="text" id="locationSearchInput" class="location-search-input" placeholder="Search any location, e.g. Moi Avenue, Makutano">
+      <div class="search-row search-row-inline">
+        <input type="text" id="locationSearchInput" class="location-search-input" placeholder="Search any location, e.g. Moi Avenue, Makutano">
+        <button type="button" id="locationSearchBtn" class="search-btn" aria-label="Search location">🔍</button>
+      </div>
     </div>
 
     <div class="empty-state" id="emptyState" style="display:none;">

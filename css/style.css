@@ -97,14 +97,23 @@ button{font-family:var(--font-body); cursor:pointer;}
 }
 .pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
 
-.product-search-wrap{position:relative;margin:4px 0 16px;}
-.product-search-input{
-  width:100%;padding:12px 14px 12px 40px;border:1.5px solid var(--line);border-radius:12px;
-  background:#fff;font-size:14px;font-family:var(--font-body);color:var(--text);box-shadow:var(--shadow);
+.search-row{display:flex;margin:4px 0 16px;}
+.search-row input{
+  flex:1;padding:12px 14px;border:1.5px solid var(--line);border-right:none;border-radius:12px 0 0 12px;
+  background:#fff;font-size:14px;font-family:var(--font-body);color:var(--text);box-shadow:var(--shadow);min-width:0;
 }
-.product-search-input::placeholder{color:var(--text-soft);}
-.product-search-input:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold-dark);}
-.product-search-wrap::before{content:'🔍';position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
+.search-row input::placeholder{color:var(--text-soft);}
+.search-row input:focus{outline:none;border-color:var(--gold-dark);}
+.search-row .search-btn{
+  border:1.5px solid var(--gold-dark);background:var(--gold);color:var(--ink);
+  padding:0 18px;border-radius:0 12px 12px 0;font-weight:700;font-size:15px;cursor:pointer;flex:0 0 auto;
+  box-shadow:var(--shadow);
+}
+.search-row .search-btn:hover{background:var(--gold-dark);color:#fff;}
+.search-row-inline{flex:2 1 220px;max-width:340px;margin:0;}
+.search-row-inline input{border-radius:9px 0 0 9px;}
+.search-row-inline .search-btn{border-radius:0 9px 9px 0;padding:0 14px;font-size:13px;}
+@media(max-width:520px){.search-row-inline{max-width:none;flex:1 1 100%;}}
 
 .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px;}
 .filter-bar select{
@@ -112,14 +121,7 @@ button{font-family:var(--font-body); cursor:pointer;}
   font-size:13px;font-weight:600;color:var(--ink-2);min-width:150px;flex:1 1 150px;max-width:220px;
 }
 .filter-bar select:focus{outline:2px solid var(--gold);outline-offset:1px;}
-.location-search-input{
-  padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;background:#fff;
-  font-size:13px;font-weight:500;color:var(--text);min-width:200px;flex:2 1 220px;max-width:340px;
-  font-family:var(--font-body);
-}
-.location-search-input::placeholder{color:var(--text-soft);font-weight:400;}
-.location-search-input:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold-dark);}
-@media(max-width:520px){.filter-bar select,.location-search-input{max-width:none;flex:1 1 100%;}}
+@media(max-width:520px){.filter-bar select{max-width:none;flex:1 1 100%;}}
 
 /* ---- feed ---- */
 .feed-header{display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px;flex-wrap:wrap;gap:10px;}
