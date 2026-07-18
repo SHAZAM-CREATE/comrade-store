@@ -2,17 +2,28 @@ import { supabase } from './supabase-client.js';
 import { requireAuth, wireLogoutButton } from './auth.js';
 import { CATEGORIES, KENYA_COUNTIES, catInfo, esc, productUrl } from './utils.js';
 
-let allProducts = [];
+const PAGE_SIZE = 10;
+
 let categoryFilter = 'all';
 let countyFilter = 'all';
 let institutionFilter = 'all';
 let townFilter = 'all';
 
-async function loadProducts() {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .order('created_at', { ascending: false });
+let offset = 0;
+let loading = false;
+let hasMore = true;
+
+function buildQuery() {
+  let query = supabase.from('products').select('*').order('created_at', { ascending: false });
+  if (categoryFilter !== 'all') query = query.eq('category', categoryFilter);
+  if (countyFilter !== 'all') query = query.eq('county', countyFilter);
+  if (institutionFilter !== 'all') query = query.eq('institution', institutionFilter);
+  if (townFilter !== 'all') query = query.eq('town', townFilter);
+  return query;
+}
+
+async function fetchPage() {
+  const { data, error } = await buildQuery().range(offset, offset + PAGE_SIZE - 1);
   if (error) { console.error(error); return []; }
   return data;
 }
@@ -49,16 +60,12 @@ function renderCategoryPills() {
     btn.addEventListener('click', () => {
       categoryFilter = btn.dataset.cat;
       renderCategoryPills();
-      renderGrid();
+      resetAndLoad();
     });
   });
 }
 
-function distinctSorted(list, key) {
-  return [...new Set(list.map(p => p[key]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
-}
-
-function renderFilterBar() {
+async function renderFilterBar() {
   const countySel = document.getElementById('countyFilterSelect');
   const instSel = document.getElementById('institutionFilterSelect');
   const townSel = document.getElementById('townFilterSelect');
@@ -66,34 +73,55 @@ function renderFilterBar() {
   countySel.innerHTML = `<option value="all">All counties</option>` +
     KENYA_COUNTIES.map(c => `<option value="${esc(c)}" ${countyFilter === c ? 'selected' : ''}>${esc(c)}</option>`).join('');
 
-  const institutions = distinctSorted(allProducts, 'institution');
+  // Small dedicated lookups — not the full product list — so this stays
+  // fast no matter how many listings exist.
+  const [{ data: institutions }, { data: towns }] = await Promise.all([
+    supabase.rpc('distinct_institutions'),
+    supabase.rpc('distinct_towns'),
+  ]);
+
   instSel.innerHTML = `<option value="all">All institutions</option>` +
-    institutions.map(i => `<option value="${esc(i)}" ${institutionFilter === i ? 'selected' : ''}>${esc(i)}</option>`).join('');
+    (institutions || []).map(i => `<option value="${esc(i)}" ${institutionFilter === i ? 'selected' : ''}>${esc(i)}</option>`).join('');
 
-  const towns = distinctSorted(allProducts, 'town');
   townSel.innerHTML = `<option value="all">All towns</option>` +
-    towns.map(t => `<option value="${esc(t)}" ${townFilter === t ? 'selected' : ''}>${esc(t)}</option>`).join('');
+    (towns || []).map(t => `<option value="${esc(t)}" ${townFilter === t ? 'selected' : ''}>${esc(t)}</option>`).join('');
 
-  countySel.onchange = () => { countyFilter = countySel.value; renderGrid(); };
-  instSel.onchange = () => { institutionFilter = instSel.value; renderGrid(); };
-  townSel.onchange = () => { townFilter = townSel.value; renderGrid(); };
+  countySel.onchange = () => { countyFilter = countySel.value; resetAndLoad(); };
+  instSel.onchange = () => { institutionFilter = instSel.value; resetAndLoad(); };
+  townSel.onchange = () => { townFilter = townSel.value; resetAndLoad(); };
 }
 
-function renderGrid() {
+function setLoadMoreVisible(visible, busy = false) {
+  const btn = document.getElementById('loadMoreBtn');
+  btn.style.display = visible ? 'inline-flex' : 'none';
+  btn.disabled = busy;
+  btn.textContent = busy ? 'Loading…' : 'Load more';
+}
+
+async function loadNextPage() {
+  if (loading || !hasMore) return;
+  loading = true;
+  setLoadMoreVisible(true, true);
+
+  const items = await fetchPage();
   const grid = document.getElementById('grid');
-  const list = allProducts.filter(p =>
-    (categoryFilter === 'all' || p.category === categoryFilter) &&
-    (countyFilter === 'all' || p.county === countyFilter) &&
-    (institutionFilter === 'all' || p.institution === institutionFilter) &&
-    (townFilter === 'all' || p.town === townFilter)
-  );
-  if (list.length === 0) {
+
+  if (offset === 0) {
+    document.getElementById('emptyState').style.display = items.length === 0 ? 'block' : 'none';
     grid.innerHTML = '';
-    document.getElementById('emptyState').style.display = 'block';
-    return;
   }
-  document.getElementById('emptyState').style.display = 'none';
-  grid.innerHTML = list.map(cardHtml).join('');
+  grid.insertAdjacentHTML('beforeend', items.map(cardHtml).join(''));
+
+  offset += items.length;
+  hasMore = items.length === PAGE_SIZE;
+  loading = false;
+  setLoadMoreVisible(hasMore, false);
+}
+
+async function resetAndLoad() {
+  offset = 0;
+  hasMore = true;
+  await loadNextPage();
 }
 
 async function init() {
@@ -105,17 +133,17 @@ async function init() {
   if (profile.is_admin) document.getElementById('adminLink').style.display = 'inline';
 
   renderCategoryPills();
-  allProducts = await loadProducts();
-  renderFilterBar();
-  renderGrid();
+  await renderFilterBar();
+  document.getElementById('loadMoreBtn').addEventListener('click', loadNextPage);
+  await resetAndLoad();
 
-  // Keep the feed live: pick up new/changed listings from other users.
+  // Keep the feed live: a change anywhere just refreshes the current
+  // filtered view from the top — cheap, since we only ever pull 10 rows
+  // at a time rather than the whole table.
   supabase
     .channel('products-feed')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, async () => {
-      allProducts = await loadProducts();
-      renderFilterBar();
-      renderGrid();
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+      resetAndLoad();
     })
     .subscribe();
 }
