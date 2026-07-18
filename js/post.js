@@ -41,6 +41,54 @@ function showError(msg) {
   box.textContent = msg;
 }
 
+function wireSecondMediaToggle() {
+  const radios = document.querySelectorAll('input[name=secondMediaType]');
+  const imgInput = document.getElementById('imageInput2');
+  const vidInput = document.getElementById('videoInput');
+  const vidHint = document.getElementById('videoHintText');
+
+  radios.forEach(r => r.addEventListener('change', () => {
+    if (!r.checked) return;
+    if (r.value === 'photo') {
+      imgInput.style.display = 'block';
+      vidInput.style.display = 'none';
+      vidHint.style.display = 'none';
+      vidInput.value = '';
+    } else if (r.value === 'video') {
+      vidInput.style.display = 'block';
+      vidHint.style.display = 'block';
+      imgInput.style.display = 'none';
+      imgInput.value = '';
+    } else {
+      imgInput.style.display = 'none';
+      vidInput.style.display = 'none';
+      vidHint.style.display = 'none';
+      imgInput.value = '';
+      vidInput.value = '';
+    }
+  }));
+}
+
+function getVideoDuration(file) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(video.src);
+      resolve(video.duration);
+    };
+    video.onerror = () => reject(new Error('Could not read that video file.'));
+    video.src = URL.createObjectURL(file);
+  });
+}
+
+async function uploadFile(bucket, file, profileId) {
+  const path = `${profileId}/${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from(bucket).upload(path, file);
+  if (error) throw new Error(error.message);
+  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+}
+
 async function handleSubmit(ev) {
   ev.preventDefault();
   showError(null);
@@ -51,18 +99,27 @@ async function handleSubmit(ev) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Publishing…';
 
-  let imageUrl = null;
-  const file = document.getElementById('imageInput').files[0];
-  if (file) {
-    const path = `${profile.id}/${Date.now()}-${file.name}`;
-    const { error: uploadErr } = await supabase.storage.from('product-images').upload(path, file);
-    if (uploadErr) {
-      showError('Photo upload failed: ' + uploadErr.message);
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Publish listing';
-      return;
+  let imageUrl = null, imageUrl2 = null, videoUrl = null;
+  try {
+    const file1 = document.getElementById('imageInput').files[0];
+    if (file1) imageUrl = await uploadFile('product-images', file1, profile.id);
+
+    const file2 = document.getElementById('imageInput2').files[0];
+    if (file2) imageUrl2 = await uploadFile('product-images', file2, profile.id);
+
+    const videoFile = document.getElementById('videoInput').files[0];
+    if (videoFile) {
+      const duration = await getVideoDuration(videoFile);
+      if (duration > 15.5) {
+        throw new Error(`Video must be 15 seconds or shorter (yours is ${duration.toFixed(1)}s).`);
+      }
+      videoUrl = await uploadFile('product-videos', videoFile, profile.id);
     }
-    imageUrl = supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+  } catch (e) {
+    showError(e.message || 'Upload failed. Please try again.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Publish listing';
+    return;
   }
 
   const product = {
@@ -71,6 +128,8 @@ async function handleSubmit(ev) {
     institution: profile.institution || null,
     town: profile.town || null,
     image_url: imageUrl,
+    image_url_2: imageUrl2,
+    video_url: videoUrl,
     title: f.get('title').trim(),
     description: f.get('description').trim(),
     category: f.get('category'),
@@ -103,6 +162,7 @@ async function init() {
   document.getElementById('contact').value = profile.phone || '';
 
   initMap();
+  wireSecondMediaToggle();
   document.getElementById('useLocationBtn').addEventListener('click', useMyLocation);
   document.getElementById('postForm').addEventListener('submit', handleSubmit);
 }
