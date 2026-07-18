@@ -45,7 +45,12 @@ function renderHeader(p) {
   document.getElementById('sellerRow').innerHTML = `👤 Sold by <strong>${esc(p.seller_username || 'a comrade')}</strong> · 📍 ${esc(p.location_name)}`;
   document.getElementById('statusFlag').textContent = p.status === 'available' ? 'Available' : 'Sold';
   document.getElementById('statusFlag').className = `status-flag ${p.status}`;
-  document.getElementById('mediaIcon').textContent = c.icon;
+  const mediaEl = document.getElementById('mediaIcon');
+  if (p.image_url) {
+    mediaEl.outerHTML = `<img id="mediaIcon" src="${esc(p.image_url)}" alt="${esc(p.title)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
+  } else {
+    mediaEl.textContent = c.icon;
+  }
 }
 
 function renderContactLocked() {
