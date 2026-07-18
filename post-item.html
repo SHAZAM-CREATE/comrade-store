@@ -13,7 +13,6 @@
     <div class="user-chip">
       <div class="avatar" id="userChipAvatar">?</div>
       <span id="userChipName"></span>
-      <button class="linkbtn" id="logoutBtn">Log out</button>
     </div>
   </div>
 
@@ -62,6 +61,11 @@
     </div>
   </div>
 
+  <div class="logout-section">
+    <button class="btn btn-outline" id="logoutBtn">Log out</button>
+  </div>
+  <div id="footerRoot"></div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script type="module">
     import { CATEGORIES } from './js/utils.js';
@@ -69,5 +73,6 @@
       CATEGORIES.map(c => `<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
   </script>
   <script type="module" src="js/post.js"></script>
+  <script type="module" src="js/footer.js"></script>
 </body>
 </html>
