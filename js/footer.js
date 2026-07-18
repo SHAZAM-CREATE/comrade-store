@@ -9,7 +9,7 @@ function renderFooter() {
       <div class="footer-inner">
         <div class="footer-brand">
           <div class="footer-logo"><span class="dot"></span>Comrade Store</div>
-          <p class="footer-tagline">Buy and sell with fellow comrades, safely and simply.</p>
+          <p class="footer-tagline">Buy and sell, safely and simply.</p>
         </div>
         <nav class="footer-links" aria-label="Contact and social links">
           <a class="footer-link" href="${esc(SOCIAL_LINKS.whatsapp)}" target="_blank" rel="noopener noreferrer">
