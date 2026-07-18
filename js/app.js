@@ -7,18 +7,25 @@ const PAGE_SIZE = 10;
 let categoryFilter = 'all';
 let countyFilter = 'all';
 let institutionFilter = 'all';
-let townFilter = 'all';
+let locationSearch = '';
 
 let offset = 0;
 let loading = false;
 let hasMore = true;
+
+function escapeLike(term) {
+  // Escape ILIKE wildcard characters so a search for e.g. "50%" or
+  // "a_b" doesn't get interpreted as a pattern.
+  return term.replace(/[%_]/g, m => '\\' + m);
+}
 
 function buildQuery() {
   let query = supabase.from('products').select('*').order('created_at', { ascending: false });
   if (categoryFilter !== 'all') query = query.eq('category', categoryFilter);
   if (countyFilter !== 'all') query = query.eq('county', countyFilter);
   if (institutionFilter !== 'all') query = query.eq('institution', institutionFilter);
-  if (townFilter !== 'all') query = query.eq('town', townFilter);
+  const term = locationSearch.trim();
+  if (term) query = query.ilike('location_name', `%${escapeLike(term)}%`);
   return query;
 }
 
@@ -65,27 +72,29 @@ function renderCategoryPills() {
 async function renderFilterBar() {
   const countySel = document.getElementById('countyFilterSelect');
   const instSel = document.getElementById('institutionFilterSelect');
-  const townSel = document.getElementById('townFilterSelect');
+  const searchInput = document.getElementById('locationSearchInput');
 
   countySel.innerHTML = `<option value="all">All counties</option>` +
     KENYA_COUNTIES.map(c => `<option value="${esc(c)}" ${countyFilter === c ? 'selected' : ''}>${esc(c)}</option>`).join('');
 
-  // Small dedicated lookups — not the full product list — so this stays
+  // Small dedicated lookup — not the full product list — so this stays
   // fast no matter how many listings exist.
-  const [{ data: institutions }, { data: towns }] = await Promise.all([
-    supabase.rpc('distinct_institutions'),
-    supabase.rpc('distinct_towns'),
-  ]);
-
+  const { data: institutions } = await supabase.rpc('distinct_institutions');
   instSel.innerHTML = `<option value="all">All institutions</option>` +
     (institutions || []).map(i => `<option value="${esc(i)}" ${institutionFilter === i ? 'selected' : ''}>${esc(i)}</option>`).join('');
 
-  townSel.innerHTML = `<option value="all">All towns</option>` +
-    (towns || []).map(t => `<option value="${esc(t)}" ${townFilter === t ? 'selected' : ''}>${esc(t)}</option>`).join('');
-
   countySel.onchange = () => { countyFilter = countySel.value; resetAndLoad(); };
   instSel.onchange = () => { institutionFilter = instSel.value; resetAndLoad(); };
-  townSel.onchange = () => { townFilter = townSel.value; resetAndLoad(); };
+
+  let debounceTimer;
+  searchInput.value = locationSearch;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      locationSearch = searchInput.value;
+      resetAndLoad();
+    }, 400);
+  });
 }
 
 function setLoadMoreVisible(visible, busy = false) {
