@@ -17,12 +17,21 @@
         <div class="field"><label>Username</label><input name="username" required pattern="[A-Za-z0-9_]{3,20}" title="3-20 letters, numbers or underscore"><small class="hint">Letters, numbers, underscore only.</small></div>
         <div class="field"><label>Email</label><input name="email" type="email" required></div>
         <div class="field"><label>Phone number</label><input name="phone" type="tel" required placeholder="07XXXXXXXX"></div>
+        <div class="field"><label>County</label><select name="county" id="countySelect" required></select></div>
+        <div class="field"><label>Institution</label><input name="institution" required placeholder="e.g. University of Nairobi"></div>
+        <div class="field"><label>Town</label><input name="town" required placeholder="e.g. Karen"></div>
         <div class="field"><label>Password</label><input name="password" type="password" required minlength="6"><small class="hint">At least 6 characters.</small></div>
         <button class="btn btn-primary" type="submit">Create account</button>
       </form>
       <p class="auth-foot">Already registered? <a class="linkbtn" href="login.html">Log in</a></p>
     </div>
   </div>
+  <script type="module">
+    import { KENYA_COUNTIES } from './js/utils.js';
+    document.getElementById('countySelect').innerHTML =
+      '<option value="" disabled selected>Select county</option>' +
+      KENYA_COUNTIES.map(c => `<option value="${c}">${c}</option>`).join('');
+  </script>
   <script type="module" src="js/register.js"></script>
 </body>
 </html>

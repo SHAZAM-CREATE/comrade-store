@@ -1,9 +1,12 @@
 import { supabase } from './supabase-client.js';
 import { requireAuth, wireLogoutButton } from './auth.js';
-import { CATEGORIES, catInfo, esc, productUrl } from './utils.js';
+import { CATEGORIES, KENYA_COUNTIES, catInfo, esc, productUrl } from './utils.js';
 
 let allProducts = [];
 let categoryFilter = 'all';
+let countyFilter = 'all';
+let institutionFilter = 'all';
+let townFilter = 'all';
 
 async function loadProducts() {
   const { data, error } = await supabase
@@ -51,9 +54,39 @@ function renderCategoryPills() {
   });
 }
 
+function distinctSorted(list, key) {
+  return [...new Set(list.map(p => p[key]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+}
+
+function renderFilterBar() {
+  const countySel = document.getElementById('countyFilterSelect');
+  const instSel = document.getElementById('institutionFilterSelect');
+  const townSel = document.getElementById('townFilterSelect');
+
+  countySel.innerHTML = `<option value="all">All counties</option>` +
+    KENYA_COUNTIES.map(c => `<option value="${esc(c)}" ${countyFilter === c ? 'selected' : ''}>${esc(c)}</option>`).join('');
+
+  const institutions = distinctSorted(allProducts, 'institution');
+  instSel.innerHTML = `<option value="all">All institutions</option>` +
+    institutions.map(i => `<option value="${esc(i)}" ${institutionFilter === i ? 'selected' : ''}>${esc(i)}</option>`).join('');
+
+  const towns = distinctSorted(allProducts, 'town');
+  townSel.innerHTML = `<option value="all">All towns</option>` +
+    towns.map(t => `<option value="${esc(t)}" ${townFilter === t ? 'selected' : ''}>${esc(t)}</option>`).join('');
+
+  countySel.onchange = () => { countyFilter = countySel.value; renderGrid(); };
+  instSel.onchange = () => { institutionFilter = instSel.value; renderGrid(); };
+  townSel.onchange = () => { townFilter = townSel.value; renderGrid(); };
+}
+
 function renderGrid() {
   const grid = document.getElementById('grid');
-  const list = allProducts.filter(p => categoryFilter === 'all' || p.category === categoryFilter);
+  const list = allProducts.filter(p =>
+    (categoryFilter === 'all' || p.category === categoryFilter) &&
+    (countyFilter === 'all' || p.county === countyFilter) &&
+    (institutionFilter === 'all' || p.institution === institutionFilter) &&
+    (townFilter === 'all' || p.town === townFilter)
+  );
   if (list.length === 0) {
     grid.innerHTML = '';
     document.getElementById('emptyState').style.display = 'block';
@@ -73,6 +106,7 @@ async function init() {
 
   renderCategoryPills();
   allProducts = await loadProducts();
+  renderFilterBar();
   renderGrid();
 
   // Keep the feed live: pick up new/changed listings from other users.
@@ -80,6 +114,7 @@ async function init() {
     .channel('products-feed')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, async () => {
       allProducts = await loadProducts();
+      renderFilterBar();
       renderGrid();
     })
     .subscribe();

@@ -47,18 +47,11 @@ async function handleSubmit(ev) {
   const f = new FormData(ev.target);
   const loc = draftLoc || myLocation || NAIROBI_FALLBACK;
 
-  let imageUrl = null;
-  const file = document.getElementById('imageInput').files[0];
-  if (file) {
-    const path = `${profile.id}/${Date.now()}-${file.name}`;
-    const { error: uploadErr } = await supabase.storage.from('product-images').upload(path, file);
-    if (uploadErr) { showError(uploadErr.message); return; }
-    imageUrl = supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
-  }
-
   const product = {
     seller_id: profile.id,
-    image_url: imageUrl,
+    county: profile.county || null,
+    institution: profile.institution || null,
+    town: profile.town || null,
     title: f.get('title').trim(),
     description: f.get('description').trim(),
     category: f.get('category'),

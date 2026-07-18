@@ -13,6 +13,15 @@ export const CATEGORIES = [
 
 export const NAIROBI_FALLBACK = {lat:-1.2833, lng:36.8167, name:'Nairobi CBD'};
 
+export const KENYA_COUNTIES = [
+  'Mombasa','Kwale','Kilifi','Tana River','Lamu','Taita Taveta','Garissa','Wajir','Mandera',
+  'Marsabit','Isiolo','Meru','Tharaka-Nithi','Embu','Kitui','Machakos','Makueni','Nyandarua',
+  'Nyeri','Kirinyaga',"Murang'a",'Kiambu','Turkana','West Pokot','Samburu','Trans Nzoia',
+  'Uasin Gishu','Elgeyo-Marakwet','Nandi','Baringo','Laikipia','Nakuru','Narok','Kajiado',
+  'Kericho','Bomet','Kakamega','Vihiga','Bungoma','Busia','Siaya','Kisumu','Homa Bay',
+  'Migori','Kisii','Nyamira','Nairobi',
+];
+
 export const TRAVEL_MODES = [
   {id:'walk', label:'Walking', icon:'🚶', speed:5},
   {id:'boda', label:'Boda Boda', icon:'🏍️', speed:30},

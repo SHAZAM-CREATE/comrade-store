@@ -4,7 +4,7 @@ import { supabase } from './supabase-client.js';
 // Supabase Auth is email/password under the hood, so we still collect a
 // username (shown throughout the app) and store it in a `profiles` row
 // linked 1:1 to the auth user.
-export async function registerUser({ username, email, phone, password }) {
+export async function registerUser({ username, email, phone, password, county, institution, town }) {
   const { data: taken, error: lookupErr } = await supabase.rpc('username_exists', { p_username: username });
   if (lookupErr) throw lookupErr;
   if (taken) throw new Error('That username is already taken.');
@@ -12,7 +12,7 @@ export async function registerUser({ username, email, phone, password }) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { username, phone } },
+    options: { data: { username, phone, county, institution, town } },
   });
   if (error) throw error;
 
@@ -21,7 +21,7 @@ export async function registerUser({ username, email, phone, password }) {
   // If confirmation is required, the profile row is instead created the
   // first time the confirmed user logs in (see ensureProfile below).
   if (data.user) {
-    await ensureProfile(data.user, { username, phone });
+    await ensureProfile(data.user, { username, phone, county, institution, town });
   }
   return data;
 }
@@ -37,6 +37,9 @@ async function ensureProfile(user, fallback = {}) {
     id: user.id,
     username: fallback.username ?? user.user_metadata?.username,
     phone: fallback.phone ?? user.user_metadata?.phone,
+    county: fallback.county ?? user.user_metadata?.county,
+    institution: fallback.institution ?? user.user_metadata?.institution,
+    town: fallback.town ?? user.user_metadata?.town,
   });
 }
 

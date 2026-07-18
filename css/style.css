@@ -94,6 +94,14 @@ button{font-family:var(--font-body); cursor:pointer;}
 }
 .pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
 
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px;}
+.filter-bar select{
+  padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;background:#fff;
+  font-size:13px;font-weight:600;color:var(--ink-2);min-width:150px;flex:1 1 150px;max-width:220px;
+}
+.filter-bar select:focus{outline:2px solid var(--gold);outline-offset:1px;}
+@media(max-width:520px){.filter-bar select{max-width:none;flex:1 1 100%;}}
+
 /* ---- feed ---- */
 .feed-header{display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px;flex-wrap:wrap;gap:10px;}
 .feed-header h1{font-size:24px;margin:0;color:var(--ink);}

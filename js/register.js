@@ -20,6 +20,9 @@ async function handleRegister(ev) {
       email: f.get('email').trim(),
       phone: f.get('phone').trim(),
       password: f.get('password'),
+      county: f.get('county'),
+      institution: f.get('institution').trim(),
+      town: f.get('town').trim(),
     });
     window.location.href = 'login.html?registered=1';
   } catch (e) {
