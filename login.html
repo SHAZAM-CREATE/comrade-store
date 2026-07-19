@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="topbar"><a class="brand" href="login.html"><span class="dot"></span>Comrade Store <small>Beta</small></a></div>
+  <div class="topbar"><a class="brand" href="login"><span class="dot"></span>Comrade Store <small>Beta</small></a></div>
   <div class="auth-wrap">
     <div class="auth-card">
       <h2>Welcome back</h2>
@@ -16,12 +16,14 @@
       <form id="loginForm">
         <div class="field"><label>Username</label><input name="username" required autocomplete="username"></div>
         <div class="field"><label>Password</label><input name="password" type="password" required autocomplete="current-password"></div>
-        <a class="forgot-link linkbtn" href="reset-password.html">Forgot password?</a>
+        <a class="forgot-link linkbtn" href="reset-password">Forgot password?</a>
         <button class="btn btn-primary" type="submit">Log in</button>
       </form>
-      <p class="auth-foot">New here? <a class="linkbtn" href="register.html">Create an account</a></p>
+      <p class="auth-foot">New here? <a class="linkbtn" href="register">Create an account</a></p>
     </div>
   </div>
+  <div id="footerRoot"></div>
   <script type="module" src="js/login.js"></script>
+  <script type="module" src="js/footer.js"></script>
 </body>
 </html>

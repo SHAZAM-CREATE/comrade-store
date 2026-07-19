@@ -64,5 +64,5 @@ export function getBrowserLocation(){
 
 // Small helper: builds a shareable link back to a product's own page.
 export function productUrl(id){
-  return `product.html?id=${encodeURIComponent(id)}`;
+  return `product?id=${encodeURIComponent(id)}`;
 }

@@ -164,7 +164,7 @@ function wireTabs() {
 async function init() {
   const profile = await requireAuth();
   if (!profile) return;
-  if (!profile.is_admin) { window.location.href = 'index.html'; return; }
+  if (!profile.is_admin) { window.location.href = 'index'; return; }
 
   document.getElementById('userChipName').textContent = profile.username || profile.email;
   document.getElementById('userChipAvatar').textContent = (profile.username || profile.email || '?').slice(0, 2).toUpperCase();

@@ -1,3 +1,18 @@
+// supabase/functions/bluepay-callback/index.ts
+//
+// Set this function's deployed URL as your "Callback URL" in the
+// bluepay.co.ke dashboard (Account → Callback URL), AND it's also sent
+// per-request as callback_url from bluepay-initiate for redundancy.
+// BluePay POSTs a JSON event here on every payment success/failure,
+// signed with HMAC-SHA256 over the raw request body using your API secret.
+//
+// Deploy with:
+//   supabase functions deploy bluepay-callback --no-verify-jwt
+// (--no-verify-jwt because BluePay calls this anonymously — we verify
+// the HMAC signature ourselves instead of a Supabase user JWT.)
+//
+// Required secrets: BLUEPAY_API_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 async function verifySignature(rawBody: string, sigHeader: string | null, secret: string): Promise<boolean> {
@@ -32,11 +47,13 @@ Deno.serve(async (req) => {
     }
 
     const payload = JSON.parse(rawBody);
+    // Events per BluePay docs: mpesa.payment.received / mpesa.payment.failed
     const event = payload.event as string;
     const accountReference = payload.data?.account_reference;
+    const checkoutRequestId = payload.data?.checkout_request_id;
 
-    if (!accountReference) {
-      return new Response(JSON.stringify({ error: 'Missing account_reference' }), { status: 400 });
+    if (!accountReference && !checkoutRequestId) {
+      return new Response(JSON.stringify({ error: 'Missing account_reference and checkout_request_id' }), { status: 400 });
     }
 
     const admin = createClient(
@@ -47,12 +64,15 @@ Deno.serve(async (req) => {
     const succeeded = event === 'mpesa.payment.received';
     const newStatus = succeeded ? 'success' : 'failed';
 
-    const { data: payment, error: updateErr } = await admin
-      .from('payments')
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq('id', accountReference)
-      .select()
-      .single();
+    // Match on BluePay's own generated account_reference (stored in
+    // provider_reference at STK time) — fall back to checkout_request_id
+    // if that's ever unavailable.
+    let query = admin.from('payments').update({ status: newStatus, updated_at: new Date().toISOString() });
+    query = accountReference
+      ? query.eq('provider_reference', accountReference)
+      : query.eq('checkout_request_id', checkoutRequestId);
+
+    const { data: payment, error: updateErr } = await query.select().single();
 
     if (updateErr || !payment) {
       return new Response(JSON.stringify({ error: updateErr?.message ?? 'Payment not found' }), { status: 404 });
@@ -64,6 +84,7 @@ Deno.serve(async (req) => {
         .upsert({ user_id: payment.user_id, product_id: payment.product_id }, { onConflict: 'user_id,product_id' });
     }
 
+    // Return 2xx quickly — BluePay does not retry webhooks.
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500 });

@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="topbar"><a class="brand" href="login.html"><span class="dot"></span>Comrade Store <small>Beta</small></a></div>
+  <div class="topbar"><a class="brand" href="login"><span class="dot"></span>Comrade Store <small>Beta</small></a></div>
   <div class="auth-wrap">
     <div class="auth-card">
       <h2>Join Comrade Store</h2>
@@ -18,14 +18,15 @@
         <div class="field"><label>Email</label><input name="email" type="email" required></div>
         <div class="field"><label>Phone number</label><input name="phone" type="tel" required placeholder="07XXXXXXXX"></div>
         <div class="field"><label>County</label><select name="county" id="countySelect" required></select></div>
-        <div class="field"><label>Institution</label><input name="institution" required placeholder="e.g. MOI,UON,KEMU..."></div>
-        <div class="field"><label>Location</label><input name="town" required placeholder="e.g. makutano,fred apartment... "></div>
+        <div class="field"><label>Institution</label><input name="institution" required placeholder="e.g. University of Nairobi"></div>
+        <div class="field"><label>Town</label><input name="town" required placeholder="e.g. Karen"></div>
         <div class="field"><label>Password</label><input name="password" type="password" required minlength="6"><small class="hint">At least 6 characters.</small></div>
         <button class="btn btn-primary" type="submit">Create account</button>
       </form>
-      <p class="auth-foot">Already registered? <a class="linkbtn" href="login.html">Log in</a></p>
+      <p class="auth-foot">Already registered? <a class="linkbtn" href="login">Log in</a></p>
     </div>
   </div>
+  <div id="footerRoot"></div>
   <script type="module">
     import { KENYA_COUNTIES } from './js/utils.js';
     document.getElementById('countySelect').innerHTML =
@@ -33,5 +34,6 @@
       KENYA_COUNTIES.map(c => `<option value="${c}">${c}</option>`).join('');
   </script>
   <script type="module" src="js/register.js"></script>
+  <script type="module" src="js/footer.js"></script>
 </body>
 </html>

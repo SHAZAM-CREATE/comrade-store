@@ -193,7 +193,7 @@ async function init() {
   const id = productIdFromUrl();
   if (!id) { document.getElementById('detailRoot').innerHTML = `<div class="empty-state">No item specified.</div>`; return; }
   product = await loadProduct(id);
-  if (!product) { document.getElementById('detailRoot').innerHTML = `<div class="empty-state">Item not found.<br><a class="btn btn-outline" style="margin-top:12px;display:inline-flex;" href="index.html">Back to feed</a></div>`; return; }
+  if (!product) { document.getElementById('detailRoot').innerHTML = `<div class="empty-state">Item not found.<br><a class="btn btn-outline" style="margin-top:12px;display:inline-flex;" href="index">Back to feed</a></div>`; return; }
 
   renderHeader(product);
   const unlocked = product.seller_id === profile.id || await isUnlocked(product.id, profile.id);

@@ -24,7 +24,7 @@ async function handleRegister(ev) {
       institution: f.get('institution').trim(),
       town: f.get('town').trim(),
     });
-    window.location.href = 'login.html?registered=1';
+    window.location.href = 'login?registered=1';
   } catch (e) {
     showError(e.message || 'Could not create account.');
     btn.disabled = false;

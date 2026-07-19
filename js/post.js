@@ -150,7 +150,7 @@ async function handleSubmit(ev) {
     submitBtn.textContent = 'Publish listing';
     return;
   }
-  window.location.href = 'index.html';
+  window.location.href = 'index';
 }
 
 async function init() {

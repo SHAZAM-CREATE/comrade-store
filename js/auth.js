@@ -67,7 +67,7 @@ export async function logout() {
 // lands on reset-password.html with a recovery session already attached.
 export async function requestPasswordReset(email) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: new URL('reset-password.html', window.location.href).toString(),
+    redirectTo: new URL('reset-password', window.location.href).toString(),
   });
   if (error) throw error;
 }
@@ -95,7 +95,7 @@ export async function getCurrentProfile() {
 export async function requireAuth() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
-    window.location.href = 'login.html';
+    window.location.href = 'login';
     return null;
   }
   return getCurrentProfile();
@@ -105,6 +105,6 @@ export function wireLogoutButton(el) {
   if (!el) return;
   el.addEventListener('click', async () => {
     await logout();
-    window.location.href = 'login.html';
+    window.location.href = 'login';
   });
 }

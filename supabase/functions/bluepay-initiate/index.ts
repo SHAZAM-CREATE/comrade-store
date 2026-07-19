@@ -2,25 +2,26 @@
 //
 // Called by the browser (js/payment.js) via supabase.functions.invoke().
 // Creates a `payments` row, then asks BluePay to send an M-Pesa STK push
-// to the buyer's phone. BluePay will later POST the result to
-// bluepay-callback (signed with HMAC-SHA256), which flips the row to
-// success/failed and — on success — inserts the matching `unlocks` row.
+// to the buyer's phone. We deliberately do NOT send our own
+// account_reference — BluePay's channel has a required-prefix rule on
+// that field ("account_reference must start with merchant prefix") that
+// isn't something we can reliably predict client-side. Per BluePay's
+// docs, account_reference is optional: when omitted, BluePay generates
+// one itself and returns it in the response — we store that generated
+// value and use it to match the later webhook instead.
 //
 // Deploy with:
 //   supabase functions deploy bluepay-initiate
 // Required secrets (set with `supabase secrets set KEY=value`):
-//   BLUEPAY_API_SECRET       — API secret from bluepay.co.ke → API Keys
-//   BLUEPAY_CHANNEL_ID       — channel UUID from bluepay.co.ke → Payment channels
-//   SUPABASE_URL             — auto-provided by Supabase
-//   SUPABASE_ANON_KEY        — auto-provided by Supabase
+//   BLUEPAY_API_SECRET        — API secret from bluepay.co.ke → API Keys
+//   BLUEPAY_CHANNEL_ID        — channel UUID from bluepay.co.ke → Payment channels
+//   PUBLIC_CALLBACK_URL       — https://<project-ref>.functions.supabase.co/bluepay-callback
+//   SUPABASE_URL              — auto-provided by Supabase
+//   SUPABASE_ANON_KEY         — auto-provided by Supabase
 //   SUPABASE_SERVICE_ROLE_KEY — auto-provided by Supabase
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// Browsers send a CORS preflight before the real POST, and Supabase Edge
-// Functions don't add CORS headers automatically — without this, every
-// call from a browser (Vercel, localhost, anywhere) gets blocked before
-// your code even runs.
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -35,7 +36,6 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
 
-    // Client bound to the caller's own JWT, so we can verify who's asking.
     const userClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
@@ -51,8 +51,6 @@ Deno.serve(async (req) => {
       return json({ error: 'productId, phone and amount are required' }, 400);
     }
 
-    // Service-role client for writes that bypass RLS (payments/unlocks
-    // are intentionally not writable by the `authenticated` role).
     const admin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -65,8 +63,6 @@ Deno.serve(async (req) => {
       .single();
     if (insertErr) return json({ error: insertErr.message }, 500);
 
-    // account_reference is how BluePay's webhook tells us which payment
-    // this was for, so we use our own payment id as that reference.
     const bpResponse = await fetch('https://bluepay.co.ke/api/stk_push.php', {
       method: 'POST',
       headers: {
@@ -77,7 +73,8 @@ Deno.serve(async (req) => {
         channel_id: Deno.env.get('BLUEPAY_CHANNEL_ID'),
         phone,
         amount,
-        account_reference: payment.id,
+        // account_reference intentionally omitted — see comment above.
+        callback_url: Deno.env.get('PUBLIC_CALLBACK_URL'),
       }),
     });
     const bpData = await bpResponse.json();
@@ -87,11 +84,13 @@ Deno.serve(async (req) => {
       return json({ error: 'BluePay rejected the request', details: bpData }, 502);
     }
 
+    // Store BluePay's own generated account_reference — this is the value
+    // that will come back on the webhook, so it's what we match against.
     await admin
       .from('payments')
       .update({
         checkout_request_id: bpData.checkout_request_id ?? null,
-        provider_reference: bpData.stk_request_id ? String(bpData.stk_request_id) : null,
+        provider_reference: bpData.account_reference ?? null,
       })
       .eq('id', payment.id);
 

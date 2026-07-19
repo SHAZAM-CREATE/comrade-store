@@ -17,7 +17,7 @@ async function handleLogin(ev) {
   btn.textContent = 'Logging in…';
   try {
     await loginWithUsername({ username: f.get('username').trim(), password: f.get('password') });
-    window.location.href = 'index.html';
+    window.location.href = 'index';
   } catch (e) {
     showError(e.message || 'Could not log in.');
     btn.disabled = false;
@@ -27,7 +27,7 @@ async function handleLogin(ev) {
 
 async function redirectIfLoggedIn() {
   const { data: { session } } = await supabase.auth.getSession();
-  if (session) window.location.href = 'index.html';
+  if (session) window.location.href = 'index';
 }
 
 redirectIfLoggedIn();

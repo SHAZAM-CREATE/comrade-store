@@ -53,7 +53,7 @@ async function handleSetPassword(ev) {
     await setNewPassword(f.get('password'));
     showInfo('Password updated! Redirecting to login…');
     await supabase.auth.signOut();
-    setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+    setTimeout(() => { window.location.href = 'login'; }, 1500);
   } catch (e) {
     showError(e.message || 'Could not update password.');
     btn.disabled = false;
