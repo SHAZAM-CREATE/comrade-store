@@ -21,8 +21,8 @@ export const PAYMENT_INITIATE_FUNCTION = "bluepay-initiate";
 // channels. Every page's footer pulls from here, so this is the only
 // place you need to update them.
 export const SOCIAL_LINKS = {
-  whatsapp: "https://wa.me/c/2547XXXXXXXX",   // your WhatsApp Channel link
+  whatsapp: "https://whatsapp.com/channel/0029Vb8eP2w4SpkM1N2cTN3A",   // your WhatsApp Channel link
   email: "support.comradestore@gmail.com",         // support inbox
-  facebook: "https://facebook.com/comradestore",
-  tiktok: "https://tiktok.com/@comradestore",
+  
 };
+
