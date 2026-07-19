@@ -198,7 +198,28 @@ async function init() {
   renderHeader(product);
   const unlocked = product.seller_id === profile.id || await isUnlocked(product.id, profile.id);
   if (unlocked) renderContactUnlocked(); else renderContactLocked();
+  renderSellerControls();
   initMap();
+}
+
+function renderSellerControls() {
+  const box = document.getElementById('sellerControls');
+  if (product.seller_id !== profile.id) { box.innerHTML = ''; return; }
+
+  const nextStatus = product.status === 'available' ? 'sold' : 'available';
+  const label = product.status === 'available' ? 'Mark as sold' : 'Mark as available';
+  const btnClass = product.status === 'available' ? 'btn-outline' : 'btn-teal';
+
+  box.innerHTML = `<button class="btn ${btnClass} btn-block" id="toggleStatusBtn" style="margin-top:10px;">${label}</button>`;
+  document.getElementById('toggleStatusBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('toggleStatusBtn');
+    btn.disabled = true;
+    const { error } = await supabase.from('products').update({ status: nextStatus }).eq('id', product.id);
+    if (error) { alert(error.message); btn.disabled = false; return; }
+    product.status = nextStatus;
+    renderHeader(product);
+    renderSellerControls();
+  });
 }
 
 init();
