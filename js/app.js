@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client.js';
-import { requireAuth, wireLogoutButton } from './auth.js';
-import { CATEGORIES, KENYA_COUNTIES, catInfo, esc, productUrl } from './utils.js';
+import { getOptionalProfile, wireLogoutButton } from './auth.js';
+import { CATEGORIES, KENYA_COUNTIES, catInfo, esc, productUrl, PRODUCT_PUBLIC_COLUMNS } from './utils.js';
 
 const PAGE_SIZE = 10;
 
@@ -28,7 +28,7 @@ function sanitizeForOr(term) {
 }
 
 function buildQuery() {
-  let query = supabase.from('products').select('*').order('created_at', { ascending: false });
+  let query = supabase.from('products').select(PRODUCT_PUBLIC_COLUMNS).order('created_at', { ascending: false });
   if (categoryFilter !== 'all') query = query.eq('category', categoryFilter);
   if (countyFilter !== 'all') query = query.eq('county', countyFilter);
   if (institutionFilter !== 'all') query = query.eq('institution', institutionFilter);
@@ -57,6 +57,7 @@ function cardHtml(p) {
   <a class="card" href="${productUrl(p.id)}" style="text-decoration:none;color:inherit;">
     <div class="card-media">
       <span class="status-flag ${p.status}">${p.status === 'available' ? 'Available' : 'Sold'}</span>
+      ${p.video_url ? '<span class="video-badge">🎥</span>' : ''}
       ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.title)}" style="width:100%;height:100%;object-fit:cover;">` : c.icon}
     </div>
     <div class="card-body">
@@ -165,13 +166,28 @@ async function resetAndLoad() {
   await loadNextPage();
 }
 
+function renderUserChip(profile) {
+  const chip = document.getElementById('userChip');
+  if (profile) {
+    chip.innerHTML = `
+      <div class="avatar" id="userChipAvatar">${esc((profile.username || profile.email || '?').slice(0, 2).toUpperCase())}</div>
+      <span id="userChipName">${esc(profile.username || profile.email)}</span>
+      <a class="linkbtn" id="adminLink" href="admin" style="display:${profile.is_admin ? 'inline' : 'none'};margin-right:4px;">Admin</a>
+    `;
+    document.getElementById('logoutSection').style.display = 'block';
+    wireLogoutButton(document.getElementById('logoutBtn'));
+  } else {
+    chip.innerHTML = `
+      <a class="linkbtn" href="login" style="margin-right:12px;">Log in</a>
+      <a class="btn btn-gold" href="register" style="padding:8px 16px;font-size:13px;">Sign up</a>
+    `;
+    document.getElementById('logoutSection').style.display = 'none';
+  }
+}
+
 async function init() {
-  const profile = await requireAuth();
-  if (!profile) return;
-  document.getElementById('userChipName').textContent = profile.username || profile.email;
-  document.getElementById('userChipAvatar').textContent = (profile.username || profile.email || '?').slice(0, 2).toUpperCase();
-  wireLogoutButton(document.getElementById('logoutBtn'));
-  if (profile.is_admin) document.getElementById('adminLink').style.display = 'inline';
+  const profile = await getOptionalProfile();
+  renderUserChip(profile);
 
   renderCategoryPills();
   await renderFilterBar();

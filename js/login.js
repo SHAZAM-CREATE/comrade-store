@@ -8,6 +8,12 @@ function showError(msg) {
   box.textContent = msg;
 }
 
+function getRedirectTarget() {
+  const params = new URLSearchParams(window.location.search);
+  const redirect = params.get('redirect');
+  return redirect ? decodeURIComponent(redirect) : 'index';
+}
+
 async function handleLogin(ev) {
   ev.preventDefault();
   showError(null);
@@ -17,7 +23,7 @@ async function handleLogin(ev) {
   btn.textContent = 'Logging in…';
   try {
     await loginWithUsername({ username: f.get('username').trim(), password: f.get('password') });
-    window.location.href = 'index';
+    window.location.href = getRedirectTarget();
   } catch (e) {
     showError(e.message || 'Could not log in.');
     btn.disabled = false;
@@ -27,7 +33,7 @@ async function handleLogin(ev) {
 
 async function redirectIfLoggedIn() {
   const { data: { session } } = await supabase.auth.getSession();
-  if (session) window.location.href = 'index';
+  if (session) window.location.href = getRedirectTarget();
 }
 
 redirectIfLoggedIn();

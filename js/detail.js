@@ -1,10 +1,10 @@
 import { supabase } from './supabase-client.js';
-import { requireAuth, wireLogoutButton } from './auth.js';
-import { catInfo, esc, haversineKm, TRAVEL_MODES, fmtTime, getBrowserLocation } from './utils.js';
+import { getOptionalProfile, wireLogoutButton, loginUrlWithReturn } from './auth.js';
+import { catInfo, esc, haversineKm, TRAVEL_MODES, fmtTime, getBrowserLocation, PRODUCT_PUBLIC_COLUMNS } from './utils.js';
 import { unlockContactWithPayment } from './payment.js';
 import { UNLOCK_FEE_KES } from './config.js';
 
-let profile, product;
+let profile, product, revealedContact = null;
 
 function productIdFromUrl() {
   return new URLSearchParams(window.location.search).get('id');
@@ -13,11 +13,17 @@ function productIdFromUrl() {
 async function loadProduct(id) {
   const { data, error } = await supabase
     .from('products')
-    .select('*, profiles(username)')
+    .select(`${PRODUCT_PUBLIC_COLUMNS}, profiles(username)`)
     .eq('id', id)
     .maybeSingle();
   if (error) console.error(error);
   if (data) data.seller_username = data.profiles?.username;
+  return data;
+}
+
+async function fetchRevealedContact(productId) {
+  const { data, error } = await supabase.rpc('get_product_contact', { p_product_id: productId });
+  if (error) { console.error(error); return null; }
   return data;
 }
 
@@ -31,8 +37,22 @@ async function isUnlocked(productId, userId) {
   return !!data;
 }
 
+function setMetaDescription(content) {
+  let tag = document.querySelector('meta[name="description"]');
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.setAttribute('name', 'description');
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute('content', content);
+}
+
 function renderHeader(p) {
   const c = catInfo(p.category);
+  document.title = `${p.title} — Comrade Store`;
+  setMetaDescription(
+    `${p.title} — KES ${Number(p.price).toLocaleString()} in ${esc(p.location_name || p.town || 'Kenya')}. ${(p.description || '').slice(0, 140)}`
+  );
   document.getElementById('catChip').innerHTML = `${c.icon} ${c.label}`;
   document.getElementById('title').textContent = p.title;
   document.getElementById('price').textContent = `KES ${Number(p.price).toLocaleString()}`;
@@ -101,9 +121,18 @@ function renderContactLocked() {
   document.getElementById('unlockBtn').addEventListener('click', startUnlock);
 }
 
+function renderContactLockedGuest() {
+  document.getElementById('contactBox').innerHTML = `
+    <div class="contact-locked">
+      <div class="lock-ic">🔒</div>
+      <p>Log in to unlock this seller's contact and arrange a purchase.</p>
+      <a class="btn btn-gold btn-block" href="${loginUrlWithReturn()}">Log in to unlock</a>
+    </div>`;
+}
+
 function renderContactUnlocked() {
   document.getElementById('contactBox').innerHTML = `
-    <div class="contact-unlocked">📞 ${esc(product.contact)}
+    <div class="contact-unlocked">📞 ${esc(revealedContact || 'Loading…')}
       <div class="sub">Contact unlocked — reach out directly to arrange the purchase.</div>
     </div>`;
 }
@@ -128,6 +157,7 @@ async function startUnlock() {
       },
     });
     if (status === 'success') {
+      revealedContact = await fetchRevealedContact(product.id);
       renderContactUnlocked();
     } else if (status === 'timeout') {
       statusEl.textContent = "Didn't get a confirmation in time. If you completed the payment, refresh this page.";
@@ -183,12 +213,27 @@ async function initMap() {
   setTimeout(() => map.invalidateSize(), 150);
 }
 
+function renderUserChip(p) {
+  const chip = document.getElementById('userChip');
+  if (p) {
+    chip.innerHTML = `
+      <div class="avatar" id="userChipAvatar">${esc((p.username || p.email || '?').slice(0, 2).toUpperCase())}</div>
+      <span id="userChipName">${esc(p.username || p.email)}</span>
+    `;
+    document.getElementById('logoutSection').style.display = 'block';
+    wireLogoutButton(document.getElementById('logoutBtn'));
+  } else {
+    chip.innerHTML = `
+      <a class="linkbtn" href="login" style="margin-right:12px;">Log in</a>
+      <a class="btn btn-gold" href="register" style="padding:8px 16px;font-size:13px;">Sign up</a>
+    `;
+    document.getElementById('logoutSection').style.display = 'none';
+  }
+}
+
 async function init() {
-  profile = await requireAuth();
-  if (!profile) return;
-  document.getElementById('userChipName').textContent = profile.username || profile.email;
-  document.getElementById('userChipAvatar').textContent = (profile.username || profile.email || '?').slice(0, 2).toUpperCase();
-  wireLogoutButton(document.getElementById('logoutBtn'));
+  profile = await getOptionalProfile();
+  renderUserChip(profile);
 
   const id = productIdFromUrl();
   if (!id) { document.getElementById('detailRoot').innerHTML = `<div class="empty-state">No item specified.</div>`; return; }
@@ -196,15 +241,24 @@ async function init() {
   if (!product) { document.getElementById('detailRoot').innerHTML = `<div class="empty-state">Item not found.<br><a class="btn btn-outline" style="margin-top:12px;display:inline-flex;" href="index">Back to feed</a></div>`; return; }
 
   renderHeader(product);
-  const unlocked = product.seller_id === profile.id || await isUnlocked(product.id, profile.id);
-  if (unlocked) renderContactUnlocked(); else renderContactLocked();
+  if (!profile) {
+    renderContactLockedGuest();
+  } else {
+    const unlocked = product.seller_id === profile.id || await isUnlocked(product.id, profile.id);
+    if (unlocked) {
+      revealedContact = await fetchRevealedContact(product.id);
+      renderContactUnlocked();
+    } else {
+      renderContactLocked();
+    }
+  }
   renderSellerControls();
   initMap();
 }
 
 function renderSellerControls() {
   const box = document.getElementById('sellerControls');
-  if (product.seller_id !== profile.id) { box.innerHTML = ''; return; }
+  if (!profile || product.seller_id !== profile.id) { box.innerHTML = ''; return; }
 
   const nextStatus = product.status === 'available' ? 'sold' : 'available';
   const label = product.status === 'available' ? 'Mark as sold' : 'Mark as available';

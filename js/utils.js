@@ -13,6 +13,12 @@ export const CATEGORIES = [
 
 export const NAIROBI_FALLBACK = {lat:-1.2833, lng:36.8167, name:'Nairobi CBD'};
 
+// Every public read of `products` should select exactly this list —
+// it deliberately excludes `contact`, which is protected at the
+// database level and only readable via the get_product_contact() RPC.
+export const PRODUCT_PUBLIC_COLUMNS =
+  'id, seller_id, title, description, category, price, condition, quantity, status, location_name, lat, lng, created_at, county, institution, town, image_url, video_url, image_url_2';
+
 export const KENYA_COUNTIES = [
   'Mombasa','Kwale','Kilifi','Tana River','Lamu','Taita Taveta','Garissa','Wajir','Mandera',
   'Marsabit','Isiolo','Meru','Tharaka-Nithi','Embu','Kitui','Machakos','Makueni','Nyandarua',

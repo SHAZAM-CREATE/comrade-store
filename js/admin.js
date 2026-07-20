@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { requireAuth, wireLogoutButton } from './auth.js';
-import { esc } from './utils.js';
+import { esc, PRODUCT_PUBLIC_COLUMNS } from './utils.js';
 
 let users = [], payments = [], soldProducts = [];
 
@@ -24,7 +24,7 @@ async function loadAll() {
   const [{ data: userRows, error: userErr }, { data: paymentRows, error: payErr }, { data: soldRows, error: soldErr }] = await Promise.all([
     supabase.rpc('admin_list_users'),
     supabase.from('payments').select('*, products(title), profiles(username)').order('created_at', { ascending: false }),
-    supabase.from('products').select('*, profiles(username)').eq('status', 'sold').order('created_at', { ascending: false }),
+    supabase.from('products').select(`${PRODUCT_PUBLIC_COLUMNS}, profiles(username)`).eq('status', 'sold').order('created_at', { ascending: false }),
   ]);
   if (userErr) console.error(userErr);
   if (payErr) console.error(payErr);

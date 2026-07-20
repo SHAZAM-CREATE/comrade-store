@@ -90,14 +90,30 @@ export async function getCurrentProfile() {
 }
 
 // Call at the top of any page that requires a logged-in user.
-// Redirects to login.html if there's no session, otherwise resolves
-// with the user's profile.
+// Redirects to login (remembering where to come back to) if there's
+// no session, otherwise resolves with the user's profile.
 export async function requireAuth() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
-    window.location.href = 'login';
+    window.location.href = loginUrlWithReturn();
     return null;
   }
+  return getCurrentProfile();
+}
+
+// Builds a login link that returns the visitor to the current page
+// afterward — use this for any "log in to do X" prompt shown to a
+// logged-out visitor (unlocking contact, posting an item, etc).
+export function loginUrlWithReturn() {
+  const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+  return `login?redirect=${returnTo}`;
+}
+
+// For pages that work for both guests and logged-in users (public
+// browsing) — never redirects, just resolves to the profile or null.
+export async function getOptionalProfile() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return null;
   return getCurrentProfile();
 }
 

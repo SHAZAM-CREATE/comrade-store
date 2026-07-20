@@ -120,3 +120,68 @@ name is configured.
   *just enough* to log in without being able to browse the users table.
 - Row Level Security means a signed-in user can only ever edit their own
   products/profile, and can only see their own payment/unlock rows.
+
+  # Comrade Store — Admin App
+
+This is the admin dashboard, deployed **completely separately** from the
+public marketplace site. It uses the same Supabase project/database, but
+lives on its own domain, its own Vercel project, and its own repo (or a
+separate folder if you keep one repo — either works).
+
+Why separate: once the public site allows anonymous browsing, keeping the
+admin dashboard bundled into that same deployment means its code (and the
+fact that an `/admin` URL even exists) ships to every visitor's browser.
+This way, nothing about the admin tool is part of the public site at all.
+
+## Why this app has its own login page
+
+Browser sessions are scoped per-domain. Logging into `comradestore.co.ke`
+does **not** log you into a separate domain like
+`admin-comradestore.vercel.app` — that's just how browser storage works,
+not a Supabase limitation. So this app has its own small `login.html`
+that signs in against the **same** Supabase project (same users, same
+`is_admin` flag) but keeps its own session locally. You'll use the same
+username/password here as on the public site — there's no separate admin
+account system, just the same accounts with `is_admin = true`.
+
+## Deploying it
+
+1. **Push this folder to its own GitHub repo** (or a separate folder in
+   your existing repo, then set Vercel's "Root Directory" to this
+   folder when importing the project).
+2. **Vercel → Add New → Project** → import it → Framework preset:
+   **Other** → deploy. You'll get a URL like
+   `admin-comradestore.vercel.app`.
+3. *(Optional but recommended)* Buy or reuse a subdomain like
+   `admin.comradestore.co.ke` and attach it in Vercel → Settings →
+   Domains, same way you did for the main site.
+4. **Update `js/config.js` in the MAIN site's project** —
+   set `ADMIN_APP_URL` to wherever this app ends up deployed, so the
+   "Admin" link shown to admin accounts on the public site points here.
+5. **Supabase → Authentication → URL Configuration** — you don't need to
+   add this domain to Redirect URLs, since this app doesn't use the
+   password-reset email flow (admins reset their password via the
+   public site if needed, same account).
+
+## Keeping it in sync
+
+`js/admin.js`, `js/auth.js`, `js/utils.js`, `js/supabase-client.js`,
+`js/footer.js`, and `css/style.css` here are copies of the same files in
+the main project. If you make future changes to the admin dashboard
+logic (e.g. adding a new report), make them here — this app no longer
+shares a live codebase with the public site, so changes don't
+automatically sync either direction.
+
+## Restricting who can even find this
+
+- The URL isn't linked from anywhere public (main site links to it only
+  for logged-in accounts with `is_admin = true`, and even then, opens in
+  a new tab rather than being crawlable).
+- `<meta name="robots" content="noindex,nofollow">` is set on
+  `index.html` and `login.html`, so it won't show up in search results
+  even if a URL leaks somewhere.
+- Even if someone finds the URL and creates an account, `admin.js`
+  checks `profile.is_admin` after login and shows an access-denied
+  screen for anyone who isn't flagged — the actual data behind every
+  table is still protected by Supabase Row Level Security regardless of
+  what the frontend shows.

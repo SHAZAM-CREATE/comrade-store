@@ -24,7 +24,9 @@ async function handleRegister(ev) {
       institution: f.get('institution').trim(),
       town: f.get('town').trim(),
     });
-    window.location.href = 'login?registered=1';
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    window.location.href = redirect ? `login?registered=1&redirect=${redirect}` : 'login?registered=1';
   } catch (e) {
     showError(e.message || 'Could not create account.');
     btn.disabled = false;

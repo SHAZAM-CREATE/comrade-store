@@ -4,16 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Item details — Comrade Store</title>
+<meta name="description" content="Browse this listing on Comrade Store — Kenya's campus resale marketplace.">
+<meta property="og:type" content="product">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="topbar">
     <a class="brand" href="index"><span class="dot"></span>Comrade Store <small>Beta</small></a>
-    <div class="user-chip">
-      <div class="avatar" id="userChipAvatar">?</div>
-      <span id="userChipName"></span>
-    </div>
+    <div class="user-chip" id="userChip"></div>
   </div>
 
   <div class="app">
@@ -48,7 +47,7 @@
     </div>
   </div>
 
-  <div class="logout-section">
+  <div class="logout-section" id="logoutSection">
     <button class="btn btn-outline" id="logoutBtn">Log out</button>
   </div>
   <div id="footerRoot"></div>

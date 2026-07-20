@@ -4,21 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Comrade Store</title>
+<meta name="description" content="Comrade Store is a campus resale marketplace — buy and sell furniture, electronics, clothes, books, and more with fellow comrades near you in Kenya.">
+<meta property="og:title" content="Comrade Store — Campus Marketplace">
+<meta property="og:description" content="Buy and sell second-hand & new items with people near you.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://comradestore.co.ke/">
+<link rel="canonical" href="https://comradestore.co.ke/">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="topbar">
     <a class="brand" href="index"><span class="dot"></span>Comrade Store <small>Beta</small></a>
-    <div class="user-chip">
-      <div class="avatar" id="userChipAvatar">?</div>
-      <span id="userChipName"></span>
-      <a class="linkbtn" id="adminLink" href="admin" style="display:none;margin-right:4px;">Admin</a>
-    </div>
+    <div class="user-chip" id="userChip"></div>
   </div>
 
   <div class="app">
     <div class="feed-header">
-      <h1>What people are selling</h1>
+      <h1>What comrades are selling</h1>
       <a class="btn btn-gold" href="post-item">+ Post an item</a>
     </div>
     <div class="search-row">
@@ -47,7 +49,7 @@
     <a class="fab" href="post-item">＋ Sell something</a>
   </div>
 
-  <div class="logout-section">
+  <div class="logout-section" id="logoutSection">
     <button class="btn btn-outline" id="logoutBtn">Log out</button>
   </div>
   <div id="footerRoot"></div>
