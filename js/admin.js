@@ -2,7 +2,7 @@ import { supabase } from './supabase-client.js';
 import { requireAuth, wireLogoutButton } from './auth.js';
 import { esc, PRODUCT_PUBLIC_COLUMNS } from './utils.js';
 
-let users = [], payments = [], soldProducts = [];
+let users = [], payments = [], soldProducts = [], emailLogs = [];
 
 function fmtKES(n) {
   return `KES ${Number(n || 0).toLocaleString()}`;
@@ -21,17 +21,20 @@ function monthLabel(key) {
 }
 
 async function loadAll() {
-  const [{ data: userRows, error: userErr }, { data: paymentRows, error: payErr }, { data: soldRows, error: soldErr }] = await Promise.all([
+  const [{ data: userRows, error: userErr }, { data: paymentRows, error: payErr }, { data: soldRows, error: soldErr }, { data: emailRows, error: emailErr }] = await Promise.all([
     supabase.rpc('admin_list_users'),
     supabase.from('payments').select('*, products(title), profiles(username)').order('created_at', { ascending: false }),
     supabase.from('products').select(`${PRODUCT_PUBLIC_COLUMNS}, profiles(username)`).eq('status', 'sold').order('created_at', { ascending: false }),
+    supabase.from('email_logs').select('*').order('created_at', { ascending: false }).limit(200),
   ]);
   if (userErr) console.error(userErr);
   if (payErr) console.error(payErr);
   if (soldErr) console.error(soldErr);
+  if (emailErr) console.error(emailErr);
   users = userRows || [];
   payments = paymentRows || [];
   soldProducts = soldRows || [];
+  emailLogs = emailRows || [];
 }
 
 function renderStats() {
@@ -141,6 +144,41 @@ async function deleteProduct(id) {
   renderStats();
 }
 
+function renderEmails() {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const sentToday = emailLogs.filter(e => new Date(e.created_at) >= startOfToday).length;
+  const sentThisMonth = emailLogs.filter(e => new Date(e.created_at) >= startOfMonth).length;
+
+  const DAILY_LIMIT = 100;
+  const MONTHLY_LIMIT = 3000;
+
+  const cards = [
+    { label: 'Sent today', value: `${sentToday} / ${DAILY_LIMIT}`, warn: sentToday >= DAILY_LIMIT * 0.8 },
+    { label: 'Sent this month', value: `${sentThisMonth} / ${MONTHLY_LIMIT}`, warn: sentThisMonth >= MONTHLY_LIMIT * 0.8 },
+    { label: 'Total logged', value: emailLogs.length },
+  ];
+  document.getElementById('emailStatGrid').innerHTML = cards.map(c => `
+    <div class="stat-card">
+      <div class="stat-label">${esc(c.label)}</div>
+      <div class="stat-value" style="${c.warn ? 'color:var(--rust);' : ''}">${esc(c.value)}</div>
+      ${c.warn ? '<div class="stat-sub" style="color:var(--rust);">Approaching Resend free-plan limit</div>' : ''}
+    </div>`).join('');
+
+  const table = document.getElementById('emailsTable');
+  if (emailLogs.length === 0) { table.innerHTML = `<tr><td class="admin-empty">No emails logged yet.</td></tr>`; return; }
+  table.innerHTML = `
+    <thead><tr><th>Date</th><th>Type</th><th>Recipient</th></tr></thead>
+    <tbody>${emailLogs.slice(0, 50).map(e => `
+      <tr>
+        <td>${fmtDate(e.created_at)}</td>
+        <td><span class="badge admin">${esc(e.email_type)}</span></td>
+        <td>${esc(e.recipient)}</td>
+      </tr>`).join('')}</tbody>`;
+}
+
 function renderAll() {
   renderStats();
   renderMonthlyRevenue();
@@ -148,6 +186,7 @@ function renderAll() {
   renderUsers();
   renderPayments();
   renderSold();
+  renderEmails();
 }
 
 function wireTabs() {

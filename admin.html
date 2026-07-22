@@ -4,17 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — Comrade Store</title>
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="topbar">
-    <a class="brand" href="index"><svg width="30" height="30" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-  <rect width="34" height="34" rx="9" fill="#122740"/>
-  <path d="M9 13h13l-3.5-3.5M22 13l-3.5 3.5" stroke="#F2A93B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <path d="M25 21H12l3.5 3.5M12 21l3.5-3.5" stroke="#2A9D8F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-</svg></span>Comrade Store <small>Admin</small></a>
+    <a class="brand" href="index"><span class="dot"></span>Comrade Store <small>Admin</small></a>
     <div class="user-chip">
       <div class="avatar" id="userChipAvatar">?</div>
       <span id="userChipName"></span>
@@ -35,6 +30,7 @@
       <button class="admin-tab" data-panel="usersPanel">Users</button>
       <button class="admin-tab" data-panel="paymentsPanel">Payments</button>
       <button class="admin-tab" data-panel="soldPanel">Sold items</button>
+      <button class="admin-tab" data-panel="emailsPanel">Emails</button>
     </div>
 
     <div class="admin-panel active" id="revenuePanel">
@@ -67,6 +63,15 @@
         <h2>Sold items</h2>
         <p style="font-size:13px;color:var(--text-soft);margin:-6px 0 14px;">Remove any sold listing to clean up the feed.</p>
         <div class="table-scroll"><table class="data-table" id="soldTable"></table></div>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="emailsPanel">
+      <div class="stat-grid" id="emailStatGrid"></div>
+      <div class="admin-section">
+        <h2>Recent emails sent</h2>
+        <p style="font-size:13px;color:var(--text-soft);margin:-6px 0 14px;">Tracks emails sent by Comrade Store itself (e.g. welcome emails). Login/password-reset emails are sent separately by Supabase and won't appear here.</p>
+        <div class="table-scroll"><table class="data-table" id="emailsTable"></table></div>
       </div>
     </div>
   </div>
