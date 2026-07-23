@@ -17,7 +17,41 @@ export const NAIROBI_FALLBACK = {lat:-1.2833, lng:36.8167, name:'Nairobi CBD'};
 // it deliberately excludes `contact`, which is protected at the
 // database level and only readable via the get_product_contact() RPC.
 export const PRODUCT_PUBLIC_COLUMNS =
-  'id, seller_id, title, description, category, price, condition, quantity, status, location_name, lat, lng, created_at, county, institution, town, image_url, video_url, image_url_2';
+  'id, seller_id, title, description, category, price, condition, quantity, status, location_name, lat, lng, created_at, county, institution, town, image_url, thumbnail_url, video_url, image_url_2';
+
+// Resizes + re-encodes an image entirely in the browser before upload —
+// keeps large phone photos from being uploaded (and later downloaded by
+// every visitor) at full multi-megabyte size. Always outputs JPEG,
+// which is also smaller than PNG for ordinary photos.
+export function compressImage(file, maxDimension = 1400, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let { width, height } = img;
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) {
+          height = Math.round(height * (maxDimension / width));
+          width = maxDimension;
+        } else {
+          width = Math.round(width * (maxDimension / height));
+          height = maxDimension;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => {
+        if (!blob) { reject(new Error('Could not compress that image.')); return; }
+        resolve(blob);
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Could not read that image file.')); };
+    img.src = objectUrl;
+  });
+}
 
 export const KENYA_COUNTIES = [
   'Mombasa','Kwale','Kilifi','Tana River','Lamu','Taita Taveta','Garissa','Wajir','Mandera',
