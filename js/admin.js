@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { requireAuth, wireLogoutButton } from './auth.js';
-import { esc, PRODUCT_PUBLIC_COLUMNS } from './utils.js';
+import { esc, PRODUCT_PUBLIC_COLUMNS, compressImage } from './utils.js';
 
 let users = [], payments = [], soldProducts = [], emailLogs = [];
 
@@ -179,6 +179,64 @@ function renderEmails() {
       </tr>`).join('')}</tbody>`;
 }
 
+async function fetchImageAsBlob(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Could not fetch original image');
+  return res.blob();
+}
+
+async function makeThumbnailFromUrl(imageUrl, productId) {
+  const blob = await fetchImageAsBlob(imageUrl);
+  const compressed = await compressImage(blob, 480, 0.7);
+  const path = `backfill/${productId}-${Date.now()}-thumb.jpg`;
+  const { error } = await supabase.storage.from('product-images').upload(path, compressed, {
+    contentType: 'image/jpeg',
+    cacheControl: '31536000',
+  });
+  if (error) throw error;
+  return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+}
+
+async function backfillThumbnails() {
+  const statusEl = document.getElementById('backfillStatus');
+  const btn = document.getElementById('backfillBtn');
+  btn.disabled = true;
+  statusEl.textContent = 'Finding listings without a thumbnail…';
+
+  const { data: rows, error } = await supabase
+    .from('products')
+    .select('id, image_url')
+    .is('thumbnail_url', null)
+    .not('image_url', 'is', null);
+
+  if (error) {
+    statusEl.textContent = 'Error: ' + error.message;
+    btn.disabled = false;
+    return;
+  }
+  if (!rows || rows.length === 0) {
+    statusEl.textContent = 'Nothing to do — every listing already has a thumbnail.';
+    btn.disabled = false;
+    return;
+  }
+
+  let done = 0, failed = 0;
+  for (const row of rows) {
+    statusEl.textContent = `Processing ${done + failed + 1} of ${rows.length}…`;
+    try {
+      const thumbUrl = await makeThumbnailFromUrl(row.image_url, row.id);
+      const { error: updateErr } = await supabase.from('products').update({ thumbnail_url: thumbUrl }).eq('id', row.id);
+      if (updateErr) throw updateErr;
+      done++;
+    } catch (e) {
+      console.error('Backfill failed for product', row.id, e);
+      failed++;
+    }
+  }
+  statusEl.textContent = `Done — ${done} thumbnail${done === 1 ? '' : 's'} created${failed ? `, ${failed} failed (check browser console)` : ''}.`;
+  btn.disabled = false;
+}
+
 function renderAll() {
   renderStats();
   renderMonthlyRevenue();
@@ -210,6 +268,7 @@ async function init() {
   wireLogoutButton(document.getElementById('logoutBtn'));
 
   wireTabs();
+  document.getElementById('backfillBtn').addEventListener('click', backfillThumbnails);
   await loadAll();
   renderAll();
 }
