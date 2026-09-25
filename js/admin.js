@@ -258,6 +258,39 @@ function wireTabs() {
   });
 }
 
+let unlockFeeEnabled = true;
+
+async function loadUnlockFeeSetting() {
+  const { data, error } = await supabase.from('app_settings').select('unlock_fee_enabled').eq('id', 1).maybeSingle();
+  if (error) { console.error(error); return; }
+  unlockFeeEnabled = data ? data.unlock_fee_enabled : true;
+}
+
+function renderUnlockFeeToggle() {
+  const btn = document.getElementById('unlockFeeToggleBtn');
+  if (unlockFeeEnabled) {
+    btn.textContent = 'Turn OFF — make contact free for everyone';
+    btn.className = 'btn btn-outline';
+  } else {
+    btn.textContent = 'Turn ON — require KES 20 to unlock';
+    btn.className = 'btn btn-teal';
+  }
+}
+
+async function toggleUnlockFee() {
+  const btn = document.getElementById('unlockFeeToggleBtn');
+  btn.disabled = true;
+  const newValue = !unlockFeeEnabled;
+  const { error } = await supabase
+    .from('app_settings')
+    .update({ unlock_fee_enabled: newValue, updated_at: new Date().toISOString() })
+    .eq('id', 1);
+  if (error) { alert(error.message); btn.disabled = false; return; }
+  unlockFeeEnabled = newValue;
+  renderUnlockFeeToggle();
+  btn.disabled = false;
+}
+
 async function init() {
   const profile = await requireAuth();
   if (!profile) return;
@@ -269,6 +302,9 @@ async function init() {
 
   wireTabs();
   document.getElementById('backfillBtn').addEventListener('click', backfillThumbnails);
+  document.getElementById('unlockFeeToggleBtn').addEventListener('click', toggleUnlockFee);
+  await loadUnlockFeeSetting();
+  renderUnlockFeeToggle();
   await loadAll();
   renderAll();
 }

@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { requireAuth, wireLogoutButton } from './auth.js';
-import { NAIROBI_FALLBACK, getBrowserLocation } from './utils.js';
+import { NAIROBI_FALLBACK, getBrowserLocation, compressImage } from './utils.js';
 
 let map, marker, draftLoc = null, myLocation = null, profile = null;
 
@@ -89,6 +89,20 @@ async function uploadFile(bucket, file, profileId) {
   return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 }
 
+// Compresses/resizes an image in the browser before uploading it —
+// far smaller than the original phone photo, and cached long-term
+// since each filename is unique (timestamp-based, never reused).
+async function uploadCompressedImage(bucket, file, profileId, maxDimension, quality, suffix) {
+  const blob = await compressImage(file, maxDimension, quality);
+  const path = `${profileId}/${Date.now()}-${suffix}.jpg`;
+  const { error } = await supabase.storage.from(bucket).upload(path, blob, {
+    contentType: 'image/jpeg',
+    cacheControl: '31536000',
+  });
+  if (error) throw new Error(error.message);
+  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+}
+
 async function handleSubmit(ev) {
   ev.preventDefault();
   showError(null);
@@ -99,13 +113,16 @@ async function handleSubmit(ev) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Publishing…';
 
-  let imageUrl = null, imageUrl2 = null, videoUrl = null;
+  let imageUrl = null, imageUrl2 = null, videoUrl = null, thumbnailUrl = null;
   try {
     const file1 = document.getElementById('imageInput').files[0];
-    if (file1) imageUrl = await uploadFile('product-images', file1, profile.id);
+    if (file1) {
+      imageUrl = await uploadCompressedImage('product-images', file1, profile.id, 1400, 0.82, 'full');
+      thumbnailUrl = await uploadCompressedImage('product-images', file1, profile.id, 480, 0.7, 'thumb');
+    }
 
     const file2 = document.getElementById('imageInput2').files[0];
-    if (file2) imageUrl2 = await uploadFile('product-images', file2, profile.id);
+    if (file2) imageUrl2 = await uploadCompressedImage('product-images', file2, profile.id, 1400, 0.82, 'full2');
 
     const videoFile = document.getElementById('videoInput').files[0];
     if (videoFile) {
@@ -129,6 +146,7 @@ async function handleSubmit(ev) {
     town: profile.town || null,
     image_url: imageUrl,
     image_url_2: imageUrl2,
+    thumbnail_url: thumbnailUrl,
     video_url: videoUrl,
     title: f.get('title').trim(),
     description: f.get('description').trim(),

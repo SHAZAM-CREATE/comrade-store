@@ -58,7 +58,7 @@ function cardHtml(p) {
     <div class="card-media">
       <span class="status-flag ${p.status}">${p.status === 'available' ? 'Available' : 'Sold'}</span>
       ${p.video_url ? '<span class="video-badge">🎥</span>' : ''}
-      ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.title)}" style="width:100%;height:100%;object-fit:cover;">` : c.icon}
+      ${p.image_url ? `<img src="${esc(p.thumbnail_url || p.image_url)}" alt="${esc(p.title)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : c.icon}
     </div>
     <div class="card-body">
       <h3>${esc(p.title)}</h3>

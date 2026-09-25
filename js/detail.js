@@ -231,6 +231,12 @@ function renderUserChip(p) {
   }
 }
 
+async function isUnlockFeeEnabled() {
+  const { data, error } = await supabase.from('app_settings').select('unlock_fee_enabled').eq('id', 1).maybeSingle();
+  if (error || !data) return true; // fail safe: default to requiring payment if the setting can't be read
+  return data.unlock_fee_enabled;
+}
+
 async function init() {
   profile = await getOptionalProfile();
   renderUserChip(profile);
@@ -244,7 +250,8 @@ async function init() {
   if (!profile) {
     renderContactLockedGuest();
   } else {
-    const unlocked = product.seller_id === profile.id || await isUnlocked(product.id, profile.id);
+    const feeEnabled = await isUnlockFeeEnabled();
+    const unlocked = product.seller_id === profile.id || !feeEnabled || await isUnlocked(product.id, profile.id);
     if (unlocked) {
       revealedContact = await fetchRevealedContact(product.id);
       renderContactUnlocked();
