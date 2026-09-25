@@ -8,7 +8,7 @@ export default async function handler(req) {
   const id = url.searchParams.get('id');
 
   // Fetch the static HTML shell you already have
-  const shellRes = await fetch(new URL('/product.html', url.origin));
+  const shellRes = await fetch(new URL('/product-page.html', url.origin));
   let html = await shellRes.text();
 
   if (id) {
