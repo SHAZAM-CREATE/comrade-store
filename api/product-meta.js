@@ -11,33 +11,17 @@ export default async function handler(req) {
   const shellRes = await fetch(new URL('/product-page.html', url.origin));
   let html = await shellRes.text();
 
-  if (id) {
-    const q = await fetch(
-      `${SUPABASE_URL}/rest/v1/products?id=eq.${id}&select=title,price,description,image_url,location_name,status`,
-      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
-    );
-    const [product] = await q.json();
+  if (product) {
+  const title = `${product.title} — Comrade Store`;
+  const desc = `${product.title} — KES ${Number(product.price).toLocaleString()} in ${product.location_name || 'Kenya'}. ${(product.description || '').slice(0, 140)}`;
+  const image = product.image_url || 'https://comradestore.co.ke/default-og.jpg';
 
-    if (product) {
-      const title = `${product.title} — Comrade Store`;
-      const desc = `${product.title} — KES ${Number(product.price).toLocaleString()} in ${product.location_name || 'Kenya'}. ${(product.description || '').slice(0, 140)}`;
-      const image = product.image_url || 'https://comradestore.co.ke/default-og.jpg';
-
-      html = html
-        .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(title)}</title>`)
-        .replace('</head>', `
-          <meta name="description" content="${escapeHtml(desc)}">
-          <meta property="og:title" content="${escapeHtml(title)}">
-          <meta property="og:description" content="${escapeHtml(desc)}">
-          <meta property="og:image" content="${escapeHtml(image)}">
-          <meta property="og:type" content="product">
-          </head>`);
-    }
-  }
-
-  return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  html = html
+    .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(title)}</title>`)
+    .replace(/<meta name="description" content=".*?">/, `<meta name="description" content="${escapeHtml(desc)}">`)
+    .replace(/<meta property="og:type" content="product">/, `
+      <meta property="og:title" content="${escapeHtml(title)}">
+      <meta property="og:description" content="${escapeHtml(desc)}">
+      <meta property="og:image" content="${escapeHtml(image)}">
+      <meta property="og:type" content="product">`);
 }
