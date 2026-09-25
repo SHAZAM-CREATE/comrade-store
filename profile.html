@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile — Comrade Store</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <a class="brand" href="index"><svg width="30" height="30" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <rect width="34" height="34" rx="9" fill="#122740"/>
+  <path d="M9 13h13l-3.5-3.5M22 13l-3.5 3.5" stroke="#F2A93B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M25 21H12l3.5 3.5M12 21l3.5-3.5" stroke="#2A9D8F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg></span>Comrade Store <small>Beta</small></a>
+    <div class="user-chip" id="userChip"></div>
+  </div>
+
+  <div class="app">
+    <a class="back-link" href="index">← Back to feed</a>
+
+    <div class="detail-panel" style="max-width:480px;margin:0 auto;">
+      <h1>My Profile</h1>
+
+      <form id="profileForm">
+        <div class="field">
+          <label>Username</label>
+          <input id="usernameInput" required>
+        </div>
+        <div class="field">
+          <label>Contact number</label>
+          <input id="phoneInput" type="tel" placeholder="07XXXXXXXX">
+        </div>
+        <div class="field">
+          <label>Institution</label>
+          <input id="institutionInput" placeholder="e.g. University of Nairobi">
+        </div>
+        <div class="field">
+          <label>Town</label>
+          <input id="townInput" placeholder="e.g. Rongai">
+        </div>
+        <button type="submit" class="btn btn-gold btn-block" id="saveBtn">Save changes</button>
+        <div id="saveStatus" class="status-note"></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="logout-section" id="logoutSection">
+    <button class="btn btn-outline" id="logoutBtn">Log out</button>
+  </div>
+
+  <script type="module" src="js/profile.js"></script>
+</body>
+</html>
