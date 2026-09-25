@@ -3,5 +3,7 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/product", "destination": "/api/product-meta" }
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" }
   ]
+  
 }

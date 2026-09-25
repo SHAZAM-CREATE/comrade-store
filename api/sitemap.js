@@ -1,0 +1,26 @@
+export const config = { runtime: 'edge' };
+
+const SUPABASE_URL = 'https://fttwibvdjqegngthpbtx.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_bwd54nGvG3yRU5IQn3aNbw_Y8kOoafg';
+
+export default async function handler(req) {
+  const url = new URL(req.url);
+  const q = await fetch(
+    `${SUPABASE_URL}/rest/v1/products?select=id,updated_at&status=eq.available`,
+    { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+  );
+  const products = await q.json();
+
+  const urls = products.map(p => `
+  <url>
+    <loc>https://comradestore.co.ke/product?id=${p.id}</loc>
+    <lastmod>${p.updated_at || ''}</lastmod>
+  </url>`).join('');
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://comradestore.co.ke/index</loc></url>${urls}
+</urlset>`;
+
+  return new Response(xml, { headers: { 'content-type': 'application/xml; charset=utf-8' } });
+}
