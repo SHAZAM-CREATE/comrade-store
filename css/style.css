@@ -311,3 +311,8 @@ table.data-table td.num{font-family:var(--font-mono);}
   .stat-card .stat-value{font-size:22px;}
   .admin-section{padding:16px;}
 }
+
+.pagination { display: flex; gap: 6px; justify-content: center; margin: 24px 0; flex-wrap: wrap; }
+.page-btn { padding: 8px 14px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; }
+.page-btn.active { background: #122740; color: white; border-color: #122740; }
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }

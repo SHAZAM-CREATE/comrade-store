@@ -2,7 +2,7 @@ import { supabase } from './supabase-client.js';
 import { getOptionalProfile, wireLogoutButton } from './auth.js';
 import { CATEGORIES, KENYA_COUNTIES, catInfo, esc, productUrl, PRODUCT_PUBLIC_COLUMNS } from './utils.js';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
 let categoryFilter = 'all';
 let countyFilter = 'all';
@@ -10,25 +10,23 @@ let institutionFilter = 'all';
 let locationSearch = '';
 let productSearch = '';
 
-let offset = 0;
-let loading = false;
-let hasMore = true;
+let currentPage = 1;
+let totalCount = 0;
 
 function escapeLike(term) {
-  // Escape ILIKE wildcard characters so a search for e.g. "50%" or
-  // "a_b" doesn't get interpreted as a pattern.
   return term.replace(/[%_]/g, m => '\\' + m);
 }
 
-// Strips characters that have special meaning inside a PostgREST
-// .or() filter string (commas separate conditions, parens group them)
-// so a search term can never break out of the intended filter.
 function sanitizeForOr(term) {
   return escapeLike(term.replace(/[,()]/g, ' ').trim());
 }
 
 function buildQuery() {
-  let query = supabase.from('products').select(PRODUCT_PUBLIC_COLUMNS).order('created_at', { ascending: false });
+  let query = supabase
+    .from('products')
+    .select(PRODUCT_PUBLIC_COLUMNS, { count: 'exact' })
+    .order('created_at', { ascending: false });
+
   if (categoryFilter !== 'all') query = query.eq('category', categoryFilter);
   if (countyFilter !== 'all') query = query.eq('county', countyFilter);
   if (institutionFilter !== 'all') query = query.eq('institution', institutionFilter);
@@ -45,10 +43,12 @@ function buildQuery() {
   return query;
 }
 
-async function fetchPage() {
-  const { data, error } = await buildQuery().range(offset, offset + PAGE_SIZE - 1);
-  if (error) { console.error(error); return []; }
-  return data;
+async function fetchPage(page) {
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+  const { data, error, count } = await buildQuery().range(from, to);
+  if (error) { console.error(error); return { items: [], count: 0 }; }
+  return { items: data, count: count ?? 0 };
 }
 
 function cardHtml(p) {
@@ -81,7 +81,7 @@ function renderCategoryPills() {
     btn.addEventListener('click', () => {
       categoryFilter = btn.dataset.cat;
       renderCategoryPills();
-      resetAndLoad();
+      goToPage(1);
     });
   });
 }
@@ -94,21 +94,19 @@ async function renderFilterBar() {
   countySel.innerHTML = `<option value="all">All counties</option>` +
     KENYA_COUNTIES.map(c => `<option value="${esc(c)}" ${countyFilter === c ? 'selected' : ''}>${esc(c)}</option>`).join('');
 
-  // Small dedicated lookup — not the full product list — so this stays
-  // fast no matter how many listings exist.
   const { data: institutions } = await supabase.rpc('distinct_institutions');
   instSel.innerHTML = `<option value="all">All institutions</option>` +
     (institutions || []).map(i => `<option value="${esc(i)}" ${institutionFilter === i ? 'selected' : ''}>${esc(i)}</option>`).join('');
 
-  countySel.onchange = () => { countyFilter = countySel.value; resetAndLoad(); };
-  instSel.onchange = () => { institutionFilter = instSel.value; resetAndLoad(); };
+  countySel.onchange = () => { countyFilter = countySel.value; goToPage(1); };
+  instSel.onchange = () => { institutionFilter = instSel.value; goToPage(1); };
 
   let debounceTimer;
   searchInput.value = locationSearch;
   const triggerLocationSearch = () => {
     clearTimeout(debounceTimer);
     locationSearch = searchInput.value;
-    resetAndLoad();
+    goToPage(1);
   };
   searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
@@ -123,7 +121,7 @@ async function renderFilterBar() {
   const triggerProductSearch = () => {
     clearTimeout(nameDebounceTimer);
     productSearch = nameSearchInput.value;
-    resetAndLoad();
+    goToPage(1);
   };
   nameSearchInput.addEventListener('input', () => {
     clearTimeout(nameDebounceTimer);
@@ -133,37 +131,44 @@ async function renderFilterBar() {
   document.getElementById('productSearchBtn').addEventListener('click', triggerProductSearch);
 }
 
-function setLoadMoreVisible(visible, busy = false) {
-  const btn = document.getElementById('loadMoreBtn');
-  btn.style.display = visible ? 'inline-flex' : 'none';
-  btn.disabled = busy;
-  btn.textContent = busy ? 'Loading…' : 'Load more';
-}
+function renderPagination() {
+  const wrap = document.getElementById('pagination');
+  if (!wrap) return;
 
-async function loadNextPage() {
-  if (loading || !hasMore) return;
-  loading = true;
-  setLoadMoreVisible(true, true);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  if (totalPages <= 1) { wrap.innerHTML = ''; return; }
 
-  const items = await fetchPage();
-  const grid = document.getElementById('grid');
+  let buttons = '';
+  buttons += `<button class="page-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>‹ Prev</button>`;
 
-  if (offset === 0) {
-    document.getElementById('emptyState').style.display = items.length === 0 ? 'block' : 'none';
-    grid.innerHTML = '';
+  for (let i = 1; i <= totalPages; i++) {
+    buttons += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
   }
-  grid.insertAdjacentHTML('beforeend', items.map(cardHtml).join(''));
 
-  offset += items.length;
-  hasMore = items.length === PAGE_SIZE;
-  loading = false;
-  setLoadMoreVisible(hasMore, false);
+  buttons += `<button class="page-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>Next ›</button>`;
+
+  wrap.innerHTML = buttons;
+  wrap.querySelectorAll('.page-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const page = Number(btn.dataset.page);
+      if (page >= 1 && page <= totalPages) goToPage(page);
+    });
+  });
 }
 
-async function resetAndLoad() {
-  offset = 0;
-  hasMore = true;
-  await loadNextPage();
+async function goToPage(page) {
+  currentPage = page;
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '<div class="loading-state">Loading…</div>';
+
+  const { items, count } = await fetchPage(page);
+  totalCount = count;
+
+  document.getElementById('emptyState').style.display = items.length === 0 ? 'block' : 'none';
+  grid.innerHTML = items.map(cardHtml).join('');
+
+  renderPagination();
+  window.scrollTo({ top: document.getElementById('grid').offsetTop - 80, behavior: 'smooth' });
 }
 
 function renderUserChip(profile) {
@@ -191,16 +196,12 @@ async function init() {
 
   renderCategoryPills();
   await renderFilterBar();
-  document.getElementById('loadMoreBtn').addEventListener('click', loadNextPage);
-  await resetAndLoad();
+  await goToPage(1);
 
-  // Keep the feed live: a change anywhere just refreshes the current
-  // filtered view from the top — cheap, since we only ever pull 10 rows
-  // at a time rather than the whole table.
   supabase
     .channel('products-feed')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
-      resetAndLoad();
+      goToPage(currentPage);
     })
     .subscribe();
 }
