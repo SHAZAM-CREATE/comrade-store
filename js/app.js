@@ -177,6 +177,7 @@ function renderUserChip(profile) {
     chip.innerHTML = `
       <div class="avatar" id="userChipAvatar">${esc((profile.username || profile.email || '?').slice(0, 2).toUpperCase())}</div>
       <span id="userChipName">${esc(profile.username || profile.email)}</span>
+      <a class="linkbtn" href="profile" style="margin-right:4px;">My Profile</a>
       <a class="linkbtn" id="adminLink" href="admin" style="display:${profile.is_admin ? 'inline' : 'none'};margin-right:4px;">Admin</a>
     `;
     document.getElementById('logoutSection').style.display = 'block';

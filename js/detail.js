@@ -219,6 +219,7 @@ function renderUserChip(p) {
     chip.innerHTML = `
       <div class="avatar" id="userChipAvatar">${esc((p.username || p.email || '?').slice(0, 2).toUpperCase())}</div>
       <span id="userChipName">${esc(p.username || p.email)}</span>
+      <a class="linkbtn" href="profile" style="margin-right:4px;">My Profile</a>
     `;
     document.getElementById('logoutSection').style.display = 'block';
     wireLogoutButton(document.getElementById('logoutBtn'));
