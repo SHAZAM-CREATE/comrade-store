@@ -6,7 +6,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_bwd54nGvG3yRU5IQn3aNbw_Y8kOoafg';
 export default async function handler(req) {
   try {
     const q = await fetch(
-      `${SUPABASE_URL}/rest/v1/products?select=id,updated_at&status=eq.available`,
+      `${SUPABASE_URL}/rest/v1/products?select=id,created_at&status=eq.available`,
       { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
     );
 
@@ -25,7 +25,7 @@ export default async function handler(req) {
     const urls = products.map(p => `
   <url>
     <loc>https://comradestore.co.ke/product?id=${p.id}</loc>
-    <lastmod>${p.updated_at || ''}</lastmod>
+    <lastmod>${p.created_at || ''}</lastmod>
   </url>`).join('');
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
