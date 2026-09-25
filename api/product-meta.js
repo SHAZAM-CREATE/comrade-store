@@ -1,0 +1,43 @@
+export const config = { runtime: 'edge' };
+
+const SUPABASE_URL = 'https://fttwibvdjqegngthpbtx.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_bwd54nGvG3yRU5IQn3aNbw_Y8kOoafg';
+
+export default async function handler(req) {
+  const url = new URL(req.url);
+  const id = url.searchParams.get('id');
+
+  // Fetch the static HTML shell you already have
+  const shellRes = await fetch(new URL('/product.html', url.origin));
+  let html = await shellRes.text();
+
+  if (id) {
+    const q = await fetch(
+      `${SUPABASE_URL}/rest/v1/products?id=eq.${id}&select=title,price,description,image_url,location_name,status`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    const [product] = await q.json();
+
+    if (product) {
+      const title = `${product.title} — Comrade Store`;
+      const desc = `${product.title} — KES ${Number(product.price).toLocaleString()} in ${product.location_name || 'Kenya'}. ${(product.description || '').slice(0, 140)}`;
+      const image = product.image_url || 'https://comradestore.co.ke/default-og.jpg';
+
+      html = html
+        .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(title)}</title>`)
+        .replace('</head>', `
+          <meta name="description" content="${escapeHtml(desc)}">
+          <meta property="og:title" content="${escapeHtml(title)}">
+          <meta property="og:description" content="${escapeHtml(desc)}">
+          <meta property="og:image" content="${escapeHtml(image)}">
+          <meta property="og:type" content="product">
+          </head>`);
+    }
+  }
+
+  return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
